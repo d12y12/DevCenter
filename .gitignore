@@ -1,0 +1,8 @@
+*.egg-info
+*.pyc
+*.swo
+*.swp
+.cache
+.coverage*
+.DS_Store
+.idea

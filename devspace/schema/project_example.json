@@ -1,0 +1,74 @@
+{
+  "project": "test",
+  "version": "0.1.0",
+  "author": "yang <d12y12@hotmail.com>",
+  "project_dir": "E:/Git/DevSpace/workdir",
+  "host": "192.168.0.108",
+  "servers": {
+    "demo": {
+      "port": 8080,
+      "type": "GitMirror",
+      "localization": true,
+      "services": {
+        "yocto": {
+          "cgit_options": {
+            "title": "Mirror Repositories",
+            "description": "",
+            "max-repo-count": 50,
+            "logo": {
+              "light": "E:/Git/DevSpace/devspace/templates/example/yocto-logo-light.png",
+              "dark": "E:/Git/DevSpace/devspace/templates/example/yocto-logo-dark.png"
+            }
+          },
+          "synchronization": {
+            "consistency": true,
+            "crontab": "0 */1 * * *"
+          },
+          "repositories": {
+            "cgit": [
+              {
+                "source": "http://git.yoctoproject.org/cgit.cgi/",
+                "excludes": [
+                  "http://git.yoctoproject.org/clean/cgit.cgi/yocto-testresults/",
+                  "http://git.yoctoproject.org/clean/cgit.cgi/yp-qa-build-perf-data/"
+                ],
+                "targets": []
+              }
+            ],
+            "github": []
+          }
+        },
+        "github": {
+          "cgit_options": {
+            "title": "Mirror Repositories",
+            "description": "",
+            "max-repo-count": 50,
+            "logo": {
+              "light": "E:/Git/DevSpace/devspace/templates/example/github-logo-light.png",
+              "dark": "E:/Git/DevSpace/devspace/templates/example/github-logo-dark.png"
+            }
+          },
+          "synchronization": {
+            "consistency": true,
+            "crontab": "0 */1 * * *"
+          },
+          "repositories": {
+            "cgit": [],
+            "github": [
+              {
+                "source": "d12y12",
+                "excludes": [],
+                "targets": []
+              },
+              {
+                "source": "scrapy/scrapy",
+                "excludes": [],
+                "targets": []
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

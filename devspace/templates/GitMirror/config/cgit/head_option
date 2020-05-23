@@ -1,0 +1,3 @@
+<script src="/statics/js/jquery-3.5.0.min.js"></script>
+<script src="/statics/js/magic.js"></script>
+<script type="text/javascript">magic()</script>

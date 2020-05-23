@@ -1,0 +1,44 @@
+-- ${service_name} Database
+PRAGMA foreign_keys = off;
+BEGIN TRANSACTION;
+-- Table: Configurations
+DROP TABLE IF EXISTS Configurations;
+CREATE TABLE Configurations (
+  service_name TEXT UNIQUE PRIMARY KEY NOT NULL,
+  consistency BOOLEAN NOT NULL DEFAULT (False),
+  crontab TEXT NOT NULL,
+  repositories TEXT NOT NULL
+);
+INSERT INTO
+  Configurations (
+    service_name,
+    consistency,
+    crontab,
+    repositories
+  )
+VALUES
+  (
+    '${service_name}',
+    '${consistency}',
+    '${crontab}',
+    '${repositories}'
+  );
+-- Table: Repositories
+DROP TABLE IF EXISTS Repositories;
+CREATE TABLE Repositories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    section TEXT,
+    owner TEXT,
+    descriptions TEXT,
+    html_url TEXT NOT NULL,
+    git_url TEXT UNIQUE NOT NULL,
+    clone_url TEXT UNIQUE NOT NULL,
+    target_url TEXT,
+    source TEXT NOT NULL,
+    source_type TEXT,
+    last_check DATETIME NOT NULL,
+    last_update DATETIME
+  );
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;

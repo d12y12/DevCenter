@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "project_schema.json",
+  "type": "object",
+  "required": [
+    "project",
+    "version",
+    "author",
+    "project_dir",
+    "host",
+    "servers"
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d]))*)$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "project_dir": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "servers": {
+      "$id": "#/properties/servers",
+      "type": "object",
+      "patternProperties": {
+        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
+          "oneOf": [
+            {
+              "$ref": "gitmirror_schema.json"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+  }
+}

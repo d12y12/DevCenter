@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "project_schema.json",
+  "type": "object",
+  "required": [
+    "project",
+    "version",
+    "author",
+    "project_dir",
+    "host",
+    "servers"
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d]))*)$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "project_dir": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "servers": {
+      "id": "#/properties/servers",
+      "type": "object",
+      "patternProperties": {
+        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
+          "$ref": "#/definitions/server"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "server": {
+      "id": "#/definitions/server",
+      "type": "object",
+      "required": [
+        "type",
+        "port",
+        "localization",
+        "services"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 8000,
+          "maximum": 9000
+        },
+        "localization": {
+          "type": "boolean"
+        },
+        "services": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

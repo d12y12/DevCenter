@@ -1,0 +1,19 @@
+${server_name}:
+    build: 
+      context: ./${server_name}
+      dockerfile: Dockerfile
+    container_name: ${server_name}
+    restart: always
+    ports:
+      - "${port}:${port}"
+    volumes:
+      - './${server_name}/config/nginx:/etc/nginx/sites-enabled'
+      - './${server_name}/config/cgit:/etc/cgitrc.d'
+      - './${server_name}/var/www:/var/www'
+      - './${server_name}/data:/srv/git'
+      - './${server_name}/temp/log:/var/log/nginx'
+      - './${server_name}/temp/cache:/var/cache/cgit'
+    networks:
+      - default
+
+
