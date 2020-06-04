@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import string
@@ -12,7 +12,7 @@ from devspace.servers import DevSpaceServer
 TEMPLATES_TO_RENDER = {
     # ${maintainer}, ${localization}
     'Dockerfile': ('${prefix_dir}/${name}/', 'Dockerfile.template', 'Dockerfile'),
-    # ${title}, ${description}, ${max-repo-count},${service_name}
+    # ${title}, ${description}, ${max-repo-count},${service_name}, ${host}
     'Cgit_Config': ('${prefix_dir}/${name}/config/cgit/', 'cgitrc.template', '${service_name}.mirror.com'),
     # ${nginx_service}
     'Nginx_Default': ('${prefix_dir}/${name}/config/nginx/', 'default.template', 'default'),
@@ -20,7 +20,7 @@ TEMPLATES_TO_RENDER = {
     'Nginx_Config': ('${prefix_dir}/${name}/config/nginx/', 'mirror.template', '${service_name}.mirror.com'),
     # ${services}
     'Index': ('${prefix_dir}/${name}/var/www/html/', 'index.html.template', 'index.html'),
-    # ${service_name}, ${consistency}, ${crontab}, ${repositories}
+    # ${service_name}, ${consistency}, ${crontab}, ${repositories}, ${host}
     'Sqlite': ('${prefix_dir}/${name}/apps/database/', 'repository.sql.template', '${service_name}.sql'),
     # ${server_name}
     'DockerCompose': ('${prefix_dir}/${name}/', 'server.yaml.template',''),
@@ -56,8 +56,7 @@ class GitMirror(DevSpaceServer):
     def _render_dockerfile(self):
         # ${maintainer}, ${localization}
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Dockerfile'])
-        author = self.settings.get("author", "")
-        maintainer = 'LABEL maintainer="%s"' % author if author else ""
+        maintainer = 'LABEL maintainer="%s"' % self.author if self.author else ""
         localization_str = ""
         if self.localization:
             local_tz = self.settings.get("LOCAL_TZ", "")
@@ -70,18 +69,21 @@ class GitMirror(DevSpaceServer):
                                "# change time to local \n" \
                                "    && ln -snf /usr/share/zoneinfo/%s /etc/localtime && echo %s > /etc/timezone \\" \
                                 % (local_mirror, local_tz, local_tz)
-        render_template(template_file, dst_file, localization=localization_str, maintainer=maintainer)
+        render_template(template_file, dst_file, localization=localization_str, maintainer=maintainer, port=self.port)
 
     def _render_cgit_config(self):
         # ${title}, ${description}, ${max-repo-count},${service_name}
         for service_name, service in self.services.items():
+            host = '{}:{}'.format(self.host, self.port)
+            schema = 'http'
+            host = host if host.startswith('http') else schema+'://{}'.format(host)
             title = service['cgit_options']['title']
             description = service['cgit_options']['description']
             max_repo_count = service['cgit_options']['max-repo-count']
             template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Cgit_Config'])
             dst_file = string.Template(dst_file).safe_substitute(service_name=service_name)
             render_template(template_file, dst_file, title=title, description=description,
-                            max_repo_count=max_repo_count, service_name=service_name)
+                            max_repo_count=max_repo_count, service_name=service_name, host=host)
 
     def _render_nginx_default(self):
         # ${nginx_service}
@@ -109,14 +111,15 @@ class GitMirror(DevSpaceServer):
 
     def _render_sqlite(self):
         # ${title}, ${description}, ${max-repo-count},${service_name}
+        host = '{}:{}'.format(self.host, self.port)
         for service_name, service in self.services.items():
-            consistency = service['synchronization']['consistency']
+            consistency = 1 if service['synchronization']['consistency'] else 0
             crontab = service['synchronization']['crontab']
             repositories = json.dumps(service['repositories'])
             template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Sqlite'])
             dst_file = string.Template(dst_file).safe_substitute(service_name=service_name)
             render_template(template_file, dst_file, consistency=consistency, crontab=crontab,
-                            repositories=repositories, service_name=service_name)
+                            repositories=repositories, service_name=service_name, host=host)
 
     def _copy_logo(self):
         project_dir = self.settings.get("project_dir", "")
@@ -137,19 +140,26 @@ class GitMirror(DevSpaceServer):
         apps_dir = self.settings.get("APPS_DIR", "")
         if not project_dir or not apps_dir:
             raise ValueError("Can't get Template or Apps directory from setting")
-        apps = self.__class__.__name__.lower()
+        apps = self.__class__.__name__
         apps_dir = normpath(apps_dir + '/' + apps)
         dst_apps_dir = normpath(project_dir + '/' + self.server_name + '/apps')
-        copytree(apps_dir, dst_apps_dir)
+        copytree(apps_dir, dst_apps_dir, ignore_patterns('database', '__pycache__'))
 
     def _mkdir_in_temp(self):
         project_dir = self.settings.get("project_dir", "")
-        dst_apps_dir = normpath(project_dir + '/' + self.server_name + '/temp')
-        for dir in os.listdir(dst_apps_dir):
-            dir = join(dst_apps_dir, dir)
+        dst_dir = normpath(project_dir + '/' + self.server_name + '/temp')
+        for sub_dir in os.listdir(dst_dir):
+            sub_dir = join(dst_dir, sub_dir)
             for service_name, service in self.services.items():
-                if not exists(join(dir, service_name)):
-                    os.mkdir(join(dir, service_name))
+                if not exists(join(sub_dir, service_name)):
+                    os.mkdir(join(sub_dir, service_name))
+
+    def _mkdir_in_data(self):
+        project_dir = self.settings.get("project_dir", "")
+        dst_dir = normpath(project_dir + '/' + self.server_name + '/data')
+        for service_name, service in self.services.items():
+            if not exists(join(dst_dir, service_name)):
+                os.mkdir(join(dst_dir, service_name))
 
     def render(self):
         service_names = []
@@ -178,6 +188,7 @@ class GitMirror(DevSpaceServer):
         self._copy_logo()
         self._copy_app()
         self._mkdir_in_temp()
+
 
     def generate_docker_compose_service(self):
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['DockerCompose'])

@@ -1,10 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import json
 import yaml
 from jsonschema import validate, RefResolver
 from devspace.settings import Settings
 from devspace.exceptions import ConfigurationError
-from devspace.utils.misc import get_path_uri, get_project_dir
+from devspace.utils.misc import get_path_uri, get_project_dir, get_project_host, get_project_author
 
 
 class PrettyDumper(yaml.SafeDumper):
@@ -24,9 +27,11 @@ class DevSpaceServer:
     def __init__(self, server_settings=None):
         self.server_name = ''
         self.port = -1
-        self.localization = False
         self.services = []
         self.settings = Settings()
+        self.localization = False
+        self.host = ''
+        self.author = ''
         self.settings.set('project_dir', get_project_dir())
         if server_settings:
             self.load_settings(server_settings)
@@ -55,6 +60,8 @@ class DevSpaceServer:
         self.localization = server_settings[self.server_name]['localization']
         self.services = server_settings[self.server_name]['services']
         self.port = server_settings[self.server_name]['port']
+        self.host = get_project_host()
+        self.author = get_project_author()
 
     def render(self):
         raise NotImplementedError

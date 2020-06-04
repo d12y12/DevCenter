@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import re
 import os
 import json
@@ -8,6 +11,7 @@ from devspace.commands import DevSpaceCommand
 from devspace.exceptions import UsageError
 from devspace.utils.misc import walk_modules
 from devspace.servers import DevSpaceServer
+from devspace.utils.misc import get_host_ip
 import inspect
 
 
@@ -35,10 +39,12 @@ class Command(DevSpaceCommand):
 
     def add_options(self, parser):
         DevSpaceCommand.add_options(self, parser)
-        parser.add_option("-a", "--a", dest="render_all", action="store_true",
+        parser.add_option("--all", dest="render_all", action="store_true",
                           help="Render all servers")
-        parser.add_option("-s", "--server", dest="server_name",
-                         help="Render server by its name")
+        parser.add_option("--server", dest="server_name",
+                          help="Render server by its name")
+        parser.add_option("--host", dest="host", action="store_true",
+                          help="Render project file host ip")
 
     def run(self, args, opts):
         if len(args) > 0:
@@ -46,6 +52,18 @@ class Command(DevSpaceCommand):
 
         if opts.render_all:
             print("render all server")
+            return
+
+        if opts.host:
+            project_dir = self.settings.get('project_dir', '')
+            if not project_dir:
+                raise UsageError('Not in project')
+            with open(os.path.join(project_dir, 'devspace.json'), 'r', encoding="utf-8") as f:
+                config = json.load(f)
+            config['host'] = get_host_ip()
+            with open(os.path.join(project_dir, 'devspace.json'), 'w', encoding="utf-8") as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            self.settings.set_dict(json.dumps(config))
             return
 
         server_name = opts.server_name

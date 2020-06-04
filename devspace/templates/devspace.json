@@ -22,15 +22,15 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "0 */1 * * *"
+            "crontab": "0 */2 * * *"
           },
           "repositories": {
             "cgit": [
               {
                 "source": "http://git.yoctoproject.org/cgit.cgi/",
                 "excludes": [
-                  "http://git.yoctoproject.org/clean/cgit.cgi/yocto-testresults/",
-                  "http://git.yoctoproject.org/clean/cgit.cgi/yp-qa-build-perf-data/"
+                  "http://git.yoctoproject.org/cgit.cgi/yocto-testresults/",
+                  "http://git.yoctoproject.org/cgit.cgi/yp-qa-build-perf-data/"
                 ],
                 "targets": []
               }
@@ -50,7 +50,7 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "0 */1 * * *"
+            "crontab": "0 */2 * * *"
           },
           "repositories": {
             "cgit": [],

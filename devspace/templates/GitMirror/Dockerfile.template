@@ -10,10 +10,14 @@ ${localization}
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
                        fcgiwrap \
-                       nginx    \
-                       cgit=1.2.1+git2.18.0-1     \
+                       nginx \
+                       cgit=1.2.1+git2.18.0-1 \
+                       git \
+                       cron \
+                       curl \
+                       gosu \
                        dumb-init \
-                       python3  \
+                       python3 \
                        python3-pip \
                        python3-pygments \
                        python3-markdown \
@@ -24,18 +28,21 @@ ${localization}
     && apt-get install --no-install-recommends --no-install-suggests -y \
                        vim \
                        procps \
-                       curl \
     && pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \ 
 # clean up
     && rm -rf /var/lib/apt/lists/* \
 # set up cgitrc
     && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc
 
-COPY apps/scripts/bootstrap.sh /etc/bootstrap.sh
+COPY apps/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod a+x /etc/bootstrap.sh 
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 8080
+WORKDIR /apps
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/etc/bootstrap.sh"]
+EXPOSE ${port}
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
+HEALTHCHECK --interval=5m --timeout=3s --start-period=1m \
+            CMD curl -sSLf http://localhost:${port} >/dev/null || exit 1

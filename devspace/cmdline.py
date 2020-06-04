@@ -1,4 +1,7 @@
-import sys, os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
 import optparse
 import inspect
 import pkg_resources

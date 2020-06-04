@@ -5,7 +5,7 @@
 # Theme
 css=/statics/default/cgit.css
 logo=/statics/default/cgit.png
-#logo-link=$HOME
+logo-link=${host}
 favicon=/statics/default/favicon.ico
 #footer=
 #header=
@@ -95,4 +95,4 @@ cache-size=1000
 #scan-path=/srv/git/$NAME/
 
 ## List of repositories.
-include=/etc/${service_name}.repo
+include=/etc/cgitrc.d/${service_name}.repo

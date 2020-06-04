@@ -2,6 +2,7 @@ ${server_name}:
     build: 
       context: ./${server_name}
       dockerfile: Dockerfile
+    image: ${server_name}
     container_name: ${server_name}
     restart: always
     ports:
@@ -13,6 +14,7 @@ ${server_name}:
       - './${server_name}/data:/srv/git'
       - './${server_name}/temp/log:/var/log/nginx'
       - './${server_name}/temp/cache:/var/cache/cgit'
+      - './${server_name}/apps:/apps'
     networks:
       - default
 

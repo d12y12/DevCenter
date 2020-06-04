@@ -5,23 +5,29 @@ BEGIN TRANSACTION;
 DROP TABLE IF EXISTS Configurations;
 CREATE TABLE Configurations (
   service_name TEXT UNIQUE PRIMARY KEY NOT NULL,
-  consistency BOOLEAN NOT NULL DEFAULT (False),
+  host TEXT NOT NULL,
+  consistency INTEGER NOT NULL DEFAULT (0),
   crontab TEXT NOT NULL,
-  repositories TEXT NOT NULL
+  repositories TEXT NOT NULL,
+  original_sql TEXT
 );
 INSERT INTO
   Configurations (
     service_name,
+    host,
     consistency,
     crontab,
-    repositories
+    repositories,
+    original_sql
   )
 VALUES
   (
     '${service_name}',
-    '${consistency}',
+    '${host}',
+    ${consistency},
     '${crontab}',
-    '${repositories}'
+    '${repositories}',
+    ''
   );
 -- Table: Repositories
 DROP TABLE IF EXISTS Repositories;
@@ -32,7 +38,6 @@ CREATE TABLE Repositories (
     owner TEXT,
     descriptions TEXT,
     html_url TEXT NOT NULL,
-    git_url TEXT UNIQUE NOT NULL,
     clone_url TEXT UNIQUE NOT NULL,
     target_url TEXT,
     source TEXT NOT NULL,

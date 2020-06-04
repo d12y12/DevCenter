@@ -30,7 +30,7 @@
       "type": "string"
     },
     "servers": {
-      "id": "#/properties/servers",
+      "$id": "#/properties/servers",
       "type": "object",
       "patternProperties": {
         "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
@@ -43,7 +43,7 @@
   "additionalProperties": false,
   "definitions": {
     "server": {
-      "id": "#/definitions/server",
+      "$id": "#/definitions/server",
       "type": "object",
       "required": [
         "type",

@@ -12,7 +12,16 @@ do
   fi
 done
 
-#/etc/init.d/fcgiwrap start
+
+#start service
 /usr/bin/spawn-fcgi -M 666 -s /var/run/fcgiwrap.socket /usr/sbin/fcgiwrap
 service cron start
-/usr/sbin/nginx -g "daemon off;"
+/usr/sbin/nginx
+
+USER_ID=${LOCAL_USER_ID:-1000}
+
+echo "Starting with UID : $USER_ID"
+useradd --shell /bin/bash -u $USER_ID -o -c "" -m yang
+/usr/sbin/gosu yang ./gitmirror.py --init
+exec /usr/sbin/gosu yang "$@"
+

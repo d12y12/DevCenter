@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import re
 import os
 import json
@@ -43,7 +46,10 @@ class Command(DevSpaceCommand):
 
         if len(args) == 2:
             project_dir = args[1]
-        project_dir = os.path.normpath(project_dir).replace('\\','/')
+        project_dir = os.path.normpath(os.path.abspath(project_dir)).replace('\\','/')
+
+        if not os.path.exists(project_dir):
+            os.mkdir(project_dir)
 
         if os.path.exists(os.path.join(project_dir, 'devspace.json')):
             self.exitcode = 1

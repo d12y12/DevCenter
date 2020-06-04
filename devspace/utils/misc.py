@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import sys
 import os
@@ -97,6 +97,26 @@ def get_project_dir():
     return os.path.dirname(conf_file) if conf_file else ""
 
 
+def get_project_host():
+    conf_file = find_project_config()
+    if conf_file:
+        with open(conf_file, 'r', encoding="utf-8") as f:
+            config = json.load(f)
+            return config['host']
+    else:
+        return ''
+
+
+def get_project_author():
+    conf_file = find_project_config()
+    if conf_file:
+        with open(conf_file, 'r', encoding="utf-8") as f:
+            config = json.load(f)
+            return config['author']
+    else:
+        return ''
+
+
 def arglist_to_dict(arglist):
     return dict(x.split('=', 1) for x in arglist)
 
@@ -159,10 +179,10 @@ def get_host_ip():
 
 
 def get_path_uri(path):
-    path = os.path.abspath(path)
+    schema_path = os.path.abspath(path)
     if sys.platform == "win32":
         scheme = "///"
-        schema_path = path.replace('\\', '/')
+        schema_path = schema_path.replace('\\', '/')
     else:
         scheme = "//"
     return "file:{}{}/".format(scheme, schema_path)
