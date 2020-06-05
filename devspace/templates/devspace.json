@@ -22,7 +22,7 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "0 */2 * * *"
+            "crontab": "00 00 * * *"
           },
           "repositories": {
             "cgit": [
@@ -50,7 +50,7 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "0 */2 * * *"
+            "crontab": "00 00 * * *"
           },
           "repositories": {
             "cgit": [],
