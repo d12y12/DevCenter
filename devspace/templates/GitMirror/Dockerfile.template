@@ -34,7 +34,7 @@ ${localization}
 # set up cgitrc
     && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc
 
-COPY apps/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

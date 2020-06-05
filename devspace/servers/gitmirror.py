@@ -8,6 +8,7 @@ import json
 from shutil import ignore_patterns, copy2
 from devspace.utils.misc import render_template, copytree
 from devspace.servers import DevSpaceServer
+import subprocess
 
 TEMPLATES_TO_RENDER = {
     # ${maintainer}, ${localization}
@@ -19,12 +20,14 @@ TEMPLATES_TO_RENDER = {
     # ${service_name}
     'Nginx_Config': ('${prefix_dir}/${name}/config/nginx/', 'mirror.template', '${service_name}.mirror.com'),
     # ${services}
-    'Index': ('${prefix_dir}/${name}/var/www/html/', 'index.html.template', 'index.html'),
+    'Index': ('${prefix_dir}/${name}/web/html/', 'index.html.template', 'index.html'),
     # ${service_name}, ${consistency}, ${crontab}, ${repositories}, ${host}
     'Sqlite': ('${prefix_dir}/${name}/apps/database/', 'repository.sql.template', '${service_name}.sql'),
     # ${server_name}
     'DockerCompose': ('${prefix_dir}/${name}/', 'server.yaml.template',''),
 }
+
+APP_SRC = 'https://github.com/d12y12/GitMirror.git'
 
 
 class GitMirror(DevSpaceServer):
@@ -127,7 +130,7 @@ class GitMirror(DevSpaceServer):
             raise ValueError("Can't get Template or Project directory from setting")
         for service_name, service in self.services.items():
             if 'logo' in service['cgit_options']:
-                dst = normpath(project_dir + '/' + self.server_name + '/var/www/statics/' + service_name)
+                dst = normpath(project_dir + '/' + self.server_name + '/web/statics/' + service_name)
                 if not exists(dst):
                     os.makedirs(dst)
                 for theme in ['light', 'dark']:
@@ -135,31 +138,39 @@ class GitMirror(DevSpaceServer):
                     dst_logo = join(dst, 'logo-%s.png' % theme)
                     copy2(src, dst_logo)
 
-    def _copy_app(self):
-        project_dir = self.settings.get("project_dir", "")
-        apps_dir = self.settings.get("APPS_DIR", "")
-        if not project_dir or not apps_dir:
-            raise ValueError("Can't get Template or Apps directory from setting")
-        apps = self.__class__.__name__
-        apps_dir = normpath(apps_dir + '/' + apps)
-        dst_apps_dir = normpath(project_dir + '/' + self.server_name + '/apps')
-        copytree(apps_dir, dst_apps_dir, ignore_patterns('database', '__pycache__'))
-
-    def _mkdir_in_temp(self):
-        project_dir = self.settings.get("project_dir", "")
-        dst_dir = normpath(project_dir + '/' + self.server_name + '/temp')
-        for sub_dir in os.listdir(dst_dir):
-            sub_dir = join(dst_dir, sub_dir)
+    def create_server_structure(self):
+        template_srv_dir = join(self.settings.get("TEMPLATES_DIR", ""), self.__class__.__name__) if \
+                                                self.settings.get("TEMPLATES_DIR", "") else ""
+        prj_srv_dir = join(self.settings.get("project_dir", ""), self.server_name) if \
+                                                self.settings.get("project_dir", "") else ""
+        if not template_srv_dir or not prj_srv_dir:
+            raise ValueError("Can't get Template or Project directory from setting")
+        os.makedirs(prj_srv_dir, exist_ok=True)
+        # copy /etc /var/www
+        copytree(template_srv_dir, prj_srv_dir, ignore_patterns('*.template', 'apps'))
+        # generate apps
+        apps_dir = join(prj_srv_dir, 'apps')
+        if not exists(apps_dir):
+            os.mkdir(apps_dir)
+            ret = subprocess.run(["git", "clone", APP_SRC, apps_dir], stdout=subprocess.DEVNULL)
+            if ret.returncode != 0:
+                raise RuntimeError("Clone app failde, please try render again")
+        else:
+            pass
+        # make temp dir
+        temp_dir = join(prj_srv_dir, 'temp')
+        os.makedirs(temp_dir, exist_ok=True)
+        os.makedirs(join(temp_dir, 'log'), exist_ok=True)
+        os.makedirs(join(temp_dir, 'cache'), exist_ok=True)
+        for sub_dir in os.listdir(temp_dir):
+            sub_dir = join(temp_dir, sub_dir)
             for service_name, service in self.services.items():
-                if not exists(join(sub_dir, service_name)):
-                    os.mkdir(join(sub_dir, service_name))
-
-    def _mkdir_in_data(self):
-        project_dir = self.settings.get("project_dir", "")
-        dst_dir = normpath(project_dir + '/' + self.server_name + '/data')
+                os.makedirs(join(sub_dir, service_name), exist_ok=True)
+        # make data dir
+        data_dir = join(prj_srv_dir, 'data')
+        os.makedirs(data_dir, exist_ok=True)
         for service_name, service in self.services.items():
-            if not exists(join(dst_dir, service_name)):
-                os.mkdir(join(dst_dir, service_name))
+                os.makedirs(join(data_dir, service_name), exist_ok=True)
 
     def render(self):
         service_names = []
@@ -170,15 +181,7 @@ class GitMirror(DevSpaceServer):
             if 'cgit_options' not in service or \
                 not self._is_valid_cgit_options(service['cgit_options']):
                 raise ValueError("Wrong cgit_options, service_name: " + service['service_name'])
-        template_dir = self.settings.get("TEMPLATES_DIR", "")
-        project_dir = self.settings.get("project_dir", "")
-        if not template_dir or not project_dir:
-            raise ValueError("Can't get Template or Project directory from setting")
-        server_dir = join(project_dir, self.server_name)
-        if not exists(server_dir):
-            os.makedirs(server_dir)
-        template_dir = join(template_dir, self.__class__.__name__)
-        copytree(template_dir, server_dir, ignore_patterns('*.template'))
+        self.create_server_structure()
         self._render_dockerfile()
         self._render_cgit_config()
         self._render_nginx_default()
@@ -186,8 +189,6 @@ class GitMirror(DevSpaceServer):
         self._rend_index()
         self._render_sqlite()
         self._copy_logo()
-        self._copy_app()
-        self._mkdir_in_temp()
 
 
     def generate_docker_compose_service(self):
