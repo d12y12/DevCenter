@@ -28,7 +28,7 @@ ${localization_tz}
 # clean up
     && rm -rf /var/lib/apt/lists/* \
 # configure cgit
-    && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc
+    && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc \
 # configure entrypint.sh
     && chmod +x /usr/local/bin/entrypoint.sh
 

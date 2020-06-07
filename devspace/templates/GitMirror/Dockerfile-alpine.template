@@ -29,7 +29,7 @@ ${localization_tz}
     && rm -rf /etc/nginx/conf.d/default.conf \
 # configure cgit
     && cp /usr/share/webapps/cgit/cgit.cgi /usr/lib/cgit/cgit.cgi \
-    && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc
+    && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc \
 # configure entrypint.sh
     && chmod +x /usr/local/bin/entrypoint.sh
 
