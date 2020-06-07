@@ -11,7 +11,7 @@
   "properties": {
     "type": {
       "type": "string",
-      "const": "GitMirror"
+      "enum": ["GitMirror-debian", "GitMirror-alpine"]
     },
     "port": {
       "type": "integer",

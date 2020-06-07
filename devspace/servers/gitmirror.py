@@ -12,7 +12,7 @@ import subprocess
 
 TEMPLATES_TO_RENDER = {
     # ${maintainer}, ${localization}
-    'Dockerfile': ('${prefix_dir}/${name}/', 'Dockerfile.template', 'Dockerfile'),
+    'Dockerfile': ('${prefix_dir}/${name}/', 'Dockerfile-${image}.template', 'Dockerfile'),
     # ${title}, ${description}, ${max-repo-count},${service_name}, ${host}
     'Cgit_Config': ('${prefix_dir}/${name}/config/cgit/', 'cgitrc.template', '${service_name}.mirror.com'),
     # ${nginx_service}
@@ -32,6 +32,7 @@ APP_SRC = 'https://github.com/d12y12/GitMirror.git'
 
 class GitMirror(DevSpaceServer):
     type = 'GitMirror'
+    image_support = ['debian', 'alpine']
     support_repository_type = ['cgit', 'github']
 
     def _is_valid_cgit_options(self, cgit_options):
@@ -57,22 +58,51 @@ class GitMirror(DevSpaceServer):
         return normpath(template_file), normpath(dst_file)
 
     def _render_dockerfile(self):
-        # ${maintainer}, ${localization}
+        # ${image} ${maintainer}, ${port}
+        # ${localization_distros_mirror}, ${localization_tz}, ${localization_python_mirror}
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Dockerfile'])
+        image = self.settings.get("IMAGE_{}".format(self.image.upper()), "")
+        if not image:
+            raise ValueError("Can't get image base from setting")
         maintainer = 'LABEL maintainer="%s"' % self.author if self.author else ""
-        localization_str = ""
+        localization_distros_mirror = ""
+        localization_tz = ""
+        localization_python_mirror = "# install python packages"
         if self.localization:
+            # change local distros mirror
+            local_distros_mirror = self.settings.get("LOCAL_{}_MIRROR".format(self.image.upper()), "")
+            if not local_distros_mirror:
+                raise ValueError("Can't get local distros mirror from setting")
+            localization_distros_mirror = "# replace source list by local\n"
+            if self.image == 'alpine':
+                localization_distros_mirror += "    && cp /etc/apk/repositories /etc/apk/repositories.backup \\\n"
+                localization_distros_mirror += "    && sed -i 's#http://dl-cdn.alpinelinux.org#{}#g' " \
+                                               "/etc/apk/repositories \\".format(local_distros_mirror)
+            else:
+                localization_distros_mirror += "    && cp /etc/apt/sources.list /etc/apt/sources.list.backup \\\n"
+                localization_distros_mirror += "    && sed -i 's#http://deb.debian.org#{}#g' " \
+                                               "/etc/apt/sources.list \\".format(local_distros_mirror)
+            # change local timezone
             local_tz = self.settings.get("LOCAL_TZ", "")
-            local_mirror = self.settings.get("LOCAL_DEBIAN_MIRROR", "")
-            if not local_tz or not local_mirror:
-                raise ValueError("Can't get TZ or Local package mirror from setting")
-            localization_str = "# replace source list by China local\n" \
-                               "    && cp /etc/apt/sources.list /etc/apt/sources.list.backup \\ \n" \
-                               "    && sed -i 's#http://deb.debian.org#%s#g' /etc/apt/sources.list \\ \n" \
-                               "# change time to local \n" \
-                               "    && ln -snf /usr/share/zoneinfo/%s /etc/localtime && echo %s > /etc/timezone \\" \
-                                % (local_mirror, local_tz, local_tz)
-        render_template(template_file, dst_file, localization=localization_str, maintainer=maintainer, port=self.port)
+            if not local_tz:
+                raise ValueError("Can't get local timezone from setting")
+            localization_tz = "# change time to local \n"
+            if self.image == 'alpine':
+                localization_tz += "    && apk add --no-cache tzdata \\\n"
+            localization_tz += "    && ln -snf /usr/share/zoneinfo/{} /etc/localtime && echo {} " \
+                               "> /etc/timezone \\".format(local_tz, local_tz)
+            # change local python mirror
+            local_python_mirror = self.settings.get("LOCAL_PYTHON_MIRROR", "")
+            if not local_python_mirror:
+                raise ValueError("Can't get python mirror from setting")
+            localization_python_mirror = "# change pip source to local\n"
+            localization_python_mirror += "    && pip3 config set global.index-url {} \\\n".format(local_python_mirror)
+            localization_python_mirror += "    # install python packages"
+
+        template_file = string.Template(template_file).safe_substitute(image=self.image)
+        render_template(template_file, dst_file, image=image, maintainer=maintainer, port=self.port,
+                        localization_distros_mirror=localization_distros_mirror, localization_tz=localization_tz,
+                        localization_python_mirror=localization_python_mirror)
 
     def _render_cgit_config(self):
         # ${title}, ${description}, ${max-repo-count},${service_name}
@@ -146,7 +176,6 @@ class GitMirror(DevSpaceServer):
         if not template_srv_dir or not prj_srv_dir:
             raise ValueError("Can't get Template or Project directory from setting")
         os.makedirs(prj_srv_dir, exist_ok=True)
-        # copy /etc /var/www
         copytree(template_srv_dir, prj_srv_dir, ignore_patterns('*.template', 'apps'))
         # generate apps
         apps_dir = join(prj_srv_dir, 'apps')

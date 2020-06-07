@@ -23,7 +23,7 @@ def _get_server_from_module(module_name, server_setting):
                     issubclass(obj, DevSpaceServer) and \
                     obj.__module__ == module.__name__ and \
                     not obj == DevSpaceServer and \
-                    server_setting[server_name]['type'] == obj.type:
+                    server_setting[server_name]['type'].split('-')[0] == obj.type:
                 return obj(server_setting)
 
 
@@ -85,7 +85,7 @@ class Command(DevSpaceCommand):
             return
         server = _get_server_from_module('devspace.servers', server_to_render)
         server.render()
-        server.update_docker_compose()
+        # server.update_docker_compose()
 
 
     @property

@@ -23,15 +23,17 @@ class PrettyDumper(yaml.SafeDumper):
 class DevSpaceServer:
 
     type = ''
+    image_support = ['debian', 'alpine', 'ubuntu']
 
     def __init__(self, server_settings=None):
         self.server_name = ''
+        self.image = ''
         self.port = -1
         self.services = []
         self.settings = Settings()
         self.localization = False
-        self.host = ''
-        self.author = ''
+        self.host = get_project_host()
+        self.author = get_project_author()
         self.settings.set('project_dir', get_project_dir())
         if server_settings:
             self.load_settings(server_settings)
@@ -60,8 +62,10 @@ class DevSpaceServer:
         self.localization = server_settings[self.server_name]['localization']
         self.services = server_settings[self.server_name]['services']
         self.port = server_settings[self.server_name]['port']
-        self.host = get_project_host()
-        self.author = get_project_author()
+        self.image = server_settings[self.server_name]['type'].split('-')[1]
+        if self.image not in self.image_support:
+            raise ConfigurationError("Not support image {}. \n"
+                                     "Support images: {}".format(self.image, self.image_support))
 
     def render(self):
         raise NotImplementedError

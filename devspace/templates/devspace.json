@@ -7,7 +7,7 @@
   "servers": {
     "demo": {
       "port": 8080,
-      "type": "GitMirror",
+      "type": "GitMirror-alpine",
       "localization": true,
       "services": {
         "yocto": {
@@ -22,12 +22,12 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "00 00 * * *"
+            "crontab": "*/5 * * * *"
           },
           "repositories": {
             "cgit": [
               {
-                "source": "http://git.yoctoproject.org/cgit.cgi/",
+                "source": "http://git.yoctoproject.org/cgit.cgi/crops/",
                 "excludes": [
                   "http://git.yoctoproject.org/cgit.cgi/yocto-testresults/",
                   "http://git.yoctoproject.org/cgit.cgi/yp-qa-build-perf-data/"
@@ -50,13 +50,13 @@
           },
           "synchronization": {
             "consistency": true,
-            "crontab": "00 00 * * *"
+            "crontab": "*/5 * * * *"
           },
           "repositories": {
             "cgit": [],
             "github": [
               {
-                "source": "d12y12",
+                "source": "d12y12/temp",
                 "excludes": [],
                 "targets": []
               },

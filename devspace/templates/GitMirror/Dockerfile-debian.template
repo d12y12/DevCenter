@@ -1,11 +1,14 @@
-FROM debian:buster-slim
+FROM ${image}
 
 ${maintainer}
 
 ENV LANG=C.UTF-8
 
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+
 RUN set -x \
-${localization}
+${localization_distros_mirror}
+${localization_tz}
 # install packages
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
@@ -16,27 +19,18 @@ ${localization}
                        cron \
                        curl \
                        gosu \
-                       dumb-init \
-                       python3 \
-                       python3-pip \
-                       python3-pygments \
-                       python3-markdown \
-                       python3-docutils \
-                       python3-bs4 \
-                       python3-requests \ 
-# development used, should not in the final packages
-    && apt-get install --no-install-recommends --no-install-suggests -y \
                        vim \
                        procps \
-    && pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \ 
+                       python3 \
+                       python3-pip \
+    ${localization_python_mirror}
+    && pip3 install --no-cache-dir pygments markdown docutils requests beautifulsoup4 \
 # clean up
     && rm -rf /var/lib/apt/lists/* \
-# set up cgitrc
+# configure cgit
     && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc
-
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
-
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# configure entrypint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /apps
 

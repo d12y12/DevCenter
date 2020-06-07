@@ -17,10 +17,15 @@ COMMANDS_MODULE = ""
 # Localization
 LOCAL_TZ = "Asia/Shanghai"
 LOCAL_DEBIAN_MIRROR = "http://mirrors.163.com"
+LOCAL_ALPINE_MIRROR = "http://mirrors.ustc.edu.cn"
+LOCAL_UBUNTU_MIRROR = "http://mirrors.ustc.edu.cn"
 LOCAL_PYTHON_MIRROR = "https://pypi.tuna.tsinghua.edu.cn/simple"
+
+# IMAGES
+IMAGE_ALPINE = "alpine:3.12"
+IMAGE_DEBIAN = "debian:buster-slim"
+IMAGE_UBUNTU = ""
 
 # Directories
 TEMPLATES_DIR = abspath(join(dirname(__file__), '..', 'templates'))
-APPS_DIR = abspath(join(dirname(__file__), '..', 'apps'))
 SCHEMA_DIR = abspath(join(dirname(__file__), '..', 'schema'))
-
