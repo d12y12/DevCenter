@@ -85,7 +85,7 @@ class Command(DevSpaceCommand):
             return
         server = _get_server_from_module('devspace.servers', server_to_render)
         server.render()
-        # server.update_docker_compose()
+        server.update_docker_compose()
 
 
     @property
