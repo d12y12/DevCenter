@@ -95,7 +95,7 @@ class Command(DevSpaceCommand):
             config['project_dir'] = project_dir
             config['host'] = get_host_ip()
             config = json.loads(string.Template(json.dumps(config)).substitute(
-                template_dir=os.path.normpath(self.templates_dir).replace('\\', '/')))
+                template_dir=os.path.normpath(self.templates_dir).replace('\\', '/'), project=project_name))
             with open(os.path.join(project_dir, 'devspace.json'), 'w', encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
             self.settings.set_dict(json.dumps(config))

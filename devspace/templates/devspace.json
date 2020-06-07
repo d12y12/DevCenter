@@ -5,7 +5,7 @@
   "project_dir": "",
   "host": "",
   "servers": {
-    "demo": {
+    "gitmirror-${project}": {
       "port": 8080,
       "type": "GitMirror-alpine",
       "localization": true,
