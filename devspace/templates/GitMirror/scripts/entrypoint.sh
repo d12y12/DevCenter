@@ -11,7 +11,7 @@ display_logo()
 add_host()
 {
   domain=$1
-  host_list=$(ls /etc/nginx/sites-enabled/ | grep domain)
+  host_list=$(ls /etc/nginx/sites-enabled/ | grep "$domain")
   for host in $host_list; do
     existed=$(grep "$host" /etc/hosts)
     if [ -z "$existed" ]; then
@@ -27,9 +27,9 @@ create_cache_dir()
 {
   extension=$1
   cache_root='/var/cache/cgit'
-  service_list=$(ls /apps/database | grep $extension)
+  service_list=$(ls /apps/database | grep "$extension")
   for service in $service_list; do
-   name=$(basename "./database/$service" $extension)
+   name=$(basename "./database/$service" "$extension")
    if [ ! -d "$cache_root/$name" ];then
       mkdir -p "$cache_root/$name"
       echo "cache $cache_root/$name created"
@@ -43,7 +43,7 @@ create_cache_dir()
 # Main                                 #
 ########################################
 logo='logo.txt'
-display_logo $logo
+display_logo "$logo"
 
 distribution=$(grep '^ID=' /etc/os-release | sed 's/ID=\(.*\)/\1/g')
 if [ -z "$distribution" ]; then
