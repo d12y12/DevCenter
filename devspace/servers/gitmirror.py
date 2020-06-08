@@ -186,15 +186,11 @@ class GitMirror(DevSpaceServer):
                 raise RuntimeError("Clone app failde, please try render again")
         else:
             pass
-        # make temp dir
-        temp_dir = join(prj_srv_dir, 'temp')
-        os.makedirs(temp_dir, exist_ok=True)
-        os.makedirs(join(temp_dir, 'log'), exist_ok=True)
-        os.makedirs(join(temp_dir, 'cache'), exist_ok=True)
-        for sub_dir in os.listdir(temp_dir):
-            sub_dir = join(temp_dir, sub_dir)
-            for service_name, service in self.services.items():
-                os.makedirs(join(sub_dir, service_name), exist_ok=True)
+        # make log dir
+        log_dir = join(prj_srv_dir, 'log')
+        os.makedirs(log_dir, exist_ok=True)
+        for service_name, service in self.services.items():
+            os.makedirs(join(log_dir, service_name), exist_ok=True)
         # make data dir
         data_dir = join(prj_srv_dir, 'data')
         os.makedirs(data_dir, exist_ok=True)

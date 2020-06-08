@@ -1,10 +1,49 @@
 #!/bin/sh
 
-logo='logo.txt'
+display_logo()
+{
+  logo=$1
+  if [ -f "$logo" ]; then
+    cat "$logo"
+  fi
+}
 
-if [ -f "$logo" ]; then
-  cat "$logo"
-fi
+add_host()
+{
+  domain=$1
+  host_list=$(ls /etc/nginx/sites-enabled/ | grep domain)
+  for host in $host_list; do
+    existed=$(grep "$host" /etc/hosts)
+    if [ -z "$existed" ]; then
+      echo "127.0.0.1 $host " >>/etc/hosts
+      echo "$host added in /etc/hosts"
+    else
+      echo "$host existed in /etc/hosts"
+    fi
+  done
+}
+
+create_cache_dir()
+{
+  extension=$1
+  cache_root='/var/cache/cgit'
+  service_list=$(ls /apps/database | grep $extension)
+  for service in $service_list; do
+   name=$(basename "./database/$service" $extension)
+   if [ ! -d "$cache_root/$name" ];then
+      mkdir -p "$cache_root/$name"
+      echo "cache $cache_root/$name created"
+   else
+      echo "cache $cache_root/$name existed"
+   fi
+  done
+}
+
+########################################
+# Main                                 #
+########################################
+logo='logo.txt'
+display_logo $logo
 
 distribution=$(grep '^ID=' /etc/os-release | sed 's/ID=\(.*\)/\1/g')
 if [ -z "$distribution" ]; then
@@ -17,16 +56,12 @@ fi
 USER_ID=${LOCAL_USER_ID:-1000}
 echo "Starting with UID : $USER_ID"
 
-host_list=$(ls /etc/nginx/sites-enabled/ | grep 'mirror')
-for host in $host_list; do
-  existed=$(grep "$host" /etc/hosts)
-  if [ -z "$existed" ]; then
-    echo "127.0.0.1 $host " >>/etc/hosts
-    echo "$host added in /etc/hosts"
-  else
-    echo "$host already in /etc/hosts"
-  fi
-done
+echo "add hosts"
+add_host mirror
+
+echo "create cache dir"
+create_cache_dir .db
+create_cache_dir .sql
 
 chmod +x gitmirror.py
 

@@ -12,8 +12,7 @@ ${server_name}:
       - './${server_name}/config/cgit:/etc/cgitrc.d'
       - './${server_name}/web:/var/www'
       - './${server_name}/data:/srv/git'
-      - './${server_name}/temp/log:/var/log/nginx'
-      - './${server_name}/temp/cache:/var/cache/cgit'
+      - './${server_name}/log:/var/log/nginx'
       - './${server_name}/apps:/apps'
     networks:
       - default

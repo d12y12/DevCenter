@@ -33,7 +33,7 @@
       "$id": "#/properties/servers",
       "type": "object",
       "patternProperties": {
-        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
+        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,20})$": {
           "$ref": "#/definitions/server"
         }
       },
