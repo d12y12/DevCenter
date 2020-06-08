@@ -56,16 +56,16 @@ fi
 USER_ID=${LOCAL_USER_ID:-1000}
 echo "Starting with UID : $USER_ID"
 
-echo "add hosts"
+echo "Add hosts"
 add_host mirror
 
-echo "create cache dir"
+echo "Create cache dir"
 create_cache_dir .db
 create_cache_dir .sql
 
 chmod +x gitmirror.py
 
-#start service
+echo "Start service"
 if [ "$distribution" = "alpine" ]; then
   /usr/bin/spawn-fcgi -M 666 -s /var/run/fcgiwrap.socket /usr/bin/fcgiwrap
   crond
