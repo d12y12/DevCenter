@@ -11,14 +11,15 @@ DevSpace
 命令
 -------
 
-Usage:
-  devspace <command> [options] [args]
+Usage::
+   
+   devspace <command> [options] [args]
 
-Available commands:
-  init          Create new project
-  render        Render servers
-  show          Show project information
-
+Available commands::
+   
+   init          Create new project
+   render        Render servers
+   show          Show project information
 
 例子
 -----
