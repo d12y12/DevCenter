@@ -4,6 +4,8 @@
 import os
 import json
 import yaml
+import string
+from os.path import join, normpath
 from jsonschema import validate, RefResolver
 from devspace.settings import Settings
 from devspace.exceptions import ConfigurationError
@@ -66,6 +68,66 @@ class DevSpaceServer:
         if self.image not in self.image_support:
             raise ConfigurationError("Not support image {}. \n"
                                      "Support images: {}".format(self.image, self.image_support))
+
+    def get_paths(self, *template_to_render):
+        template_dir = self.settings.get("TEMPLATES_DIR", "")
+        project_dir = self.settings.get("project_dir", "")
+        if not template_dir or not project_dir:
+            raise ValueError("Can't get Template or Project directory from setting")
+        template_file = join(template_to_render[0], template_to_render[1])
+        dst_file = join(template_to_render[0], template_to_render[2])
+        template_file = string.Template(template_file).safe_substitute(prefix_dir=template_dir,
+                                                                       name=self.__class__.__name__)
+        dst_file = string.Template(dst_file).safe_substitute(prefix_dir=project_dir, name=self.server_name)
+        return normpath(template_file), normpath(dst_file)
+
+    def get_localizations(self, tz=True, distros=True, python=True):
+        localization_distros_mirror = ""
+        localization_tz = ""
+        localization_python_mirror = ""
+        if distros:
+            local_distros_mirror = self.settings.get("LOCAL_{}_MIRROR".format(self.image.upper()), "")
+            if not local_distros_mirror:
+                raise ValueError("Can't get local distros mirror from setting")
+            localization_distros_mirror = "# replace source list by local\n"
+            if self.image == 'alpine':
+                localization_distros_mirror += "    && cp /etc/apk/repositories /etc/apk/repositories.backup \\\n"
+                localization_distros_mirror += "    && sed -i 's#http://dl-cdn.alpinelinux.org#{}#g' " \
+                                               "/etc/apk/repositories \\".format(local_distros_mirror)
+            else:
+                localization_distros_mirror += "    && cp /etc/apt/sources.list /etc/apt/sources.list.backup \\\n"
+                localization_distros_mirror += "    && sed -i 's#http://deb.debian.org#{}#g' " \
+                                               "/etc/apt/sources.list \\".format(local_distros_mirror)
+        if tz:
+            # change local timezone
+            local_tz = self.settings.get("LOCAL_TZ", "")
+            if not local_tz:
+                raise ValueError("Can't get local timezone from setting")
+            localization_tz = "# change time to local \n"
+            if self.image == 'alpine':
+                localization_tz += "    && apk add --no-cache tzdata \\\n"
+            localization_tz += "    && ln -snf /usr/share/zoneinfo/{} /etc/localtime && echo {} " \
+                               "> /etc/timezone \\".format(local_tz, local_tz)
+        if python:
+            # change local python mirror
+            local_python_mirror = self.settings.get("LOCAL_PYTHON_MIRROR", "")
+            if not local_python_mirror:
+                raise ValueError("Can't get python mirror from setting")
+            localization_python_mirror = "# change pip source to local\n"
+            localization_python_mirror += "    && pip3 config set global.index-url {} \\\n".format(local_python_mirror)
+            localization_python_mirror += "    # install python packages"
+        return {
+            "tz": localization_tz,
+            "distros": localization_distros_mirror,
+            "python": localization_python_mirror
+        }
+
+    def check_duplicate_service_name(self):
+        service_names = []
+        for service_name, service in self.services.items():
+            if service_name in service_names:
+                raise ValueError("Wrong service_name")
+            service_names.append(service_name)
 
     def render(self):
         raise NotImplementedError

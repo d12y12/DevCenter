@@ -11,7 +11,4 @@ server {
     root   /var/www;
     expires 30d;
   }
-${nginx_service}
-
 }
-

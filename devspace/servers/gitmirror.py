@@ -15,7 +15,7 @@ TEMPLATES_TO_RENDER = {
     'Dockerfile': ('${prefix_dir}/${name}/', 'Dockerfile-${image}.template', 'Dockerfile'),
     # ${title}, ${description}, ${max-repo-count},${service_name}, ${host}
     'Cgit_Config': ('${prefix_dir}/${name}/config/cgit/', 'cgitrc.template', '${service_name}.mirror.com'),
-    # ${nginx_service}
+    # ${nginx_service} ${port}
     'Nginx_Default': ('${prefix_dir}/${name}/config/nginx/', 'default.template', 'default'),
     # ${service_name}
     'Nginx_Config': ('${prefix_dir}/${name}/config/nginx/', 'mirror.template', '${service_name}.mirror.com'),
@@ -45,18 +45,6 @@ class GitMirror(DevSpaceServer):
                 return False
         return True
 
-    def get_paths(self, *template_to_render):
-        template_dir = self.settings.get("TEMPLATES_DIR", "")
-        project_dir = self.settings.get("project_dir", "")
-        if not template_dir or not project_dir:
-            raise ValueError("Can't get Template or Project directory from setting")
-        template_file = join(template_to_render[0], template_to_render[1])
-        dst_file = join(template_to_render[0], template_to_render[2])
-        template_file = string.Template(template_file).safe_substitute(prefix_dir=template_dir,
-                                                                       name=self.__class__.__name__)
-        dst_file = string.Template(dst_file).safe_substitute(prefix_dir=project_dir, name=self.server_name)
-        return normpath(template_file), normpath(dst_file)
-
     def _render_dockerfile(self):
         # ${image} ${maintainer}, ${port}
         # ${localization_distros_mirror}, ${localization_tz}, ${localization_python_mirror}
@@ -69,36 +57,10 @@ class GitMirror(DevSpaceServer):
         localization_tz = ""
         localization_python_mirror = "# install python packages"
         if self.localization:
-            # change local distros mirror
-            local_distros_mirror = self.settings.get("LOCAL_{}_MIRROR".format(self.image.upper()), "")
-            if not local_distros_mirror:
-                raise ValueError("Can't get local distros mirror from setting")
-            localization_distros_mirror = "# replace source list by local\n"
-            if self.image == 'alpine':
-                localization_distros_mirror += "    && cp /etc/apk/repositories /etc/apk/repositories.backup \\\n"
-                localization_distros_mirror += "    && sed -i 's#http://dl-cdn.alpinelinux.org#{}#g' " \
-                                               "/etc/apk/repositories \\".format(local_distros_mirror)
-            else:
-                localization_distros_mirror += "    && cp /etc/apt/sources.list /etc/apt/sources.list.backup \\\n"
-                localization_distros_mirror += "    && sed -i 's#http://deb.debian.org#{}#g' " \
-                                               "/etc/apt/sources.list \\".format(local_distros_mirror)
-            # change local timezone
-            local_tz = self.settings.get("LOCAL_TZ", "")
-            if not local_tz:
-                raise ValueError("Can't get local timezone from setting")
-            localization_tz = "# change time to local \n"
-            if self.image == 'alpine':
-                localization_tz += "    && apk add --no-cache tzdata \\\n"
-            localization_tz += "    && ln -snf /usr/share/zoneinfo/{} /etc/localtime && echo {} " \
-                               "> /etc/timezone \\".format(local_tz, local_tz)
-            # change local python mirror
-            local_python_mirror = self.settings.get("LOCAL_PYTHON_MIRROR", "")
-            if not local_python_mirror:
-                raise ValueError("Can't get python mirror from setting")
-            localization_python_mirror = "# change pip source to local\n"
-            localization_python_mirror += "    && pip3 config set global.index-url {} \\\n".format(local_python_mirror)
-            localization_python_mirror += "    # install python packages"
-
+            localizations_strings = self.get_localizations()
+            localization_tz = localizations_strings['tz']
+            localization_distros_mirror = localizations_strings['distros']
+            localization_python_mirror = localizations_strings['python']
         template_file = string.Template(template_file).safe_substitute(image=self.image)
         render_template(template_file, dst_file, image=image, maintainer=maintainer, port=self.port,
                         localization_distros_mirror=localization_distros_mirror, localization_tz=localization_tz,
@@ -119,21 +81,21 @@ class GitMirror(DevSpaceServer):
                             max_repo_count=max_repo_count, service_name=service_name, host=host)
 
     def _render_nginx_default(self):
-        # ${nginx_service}
+        # ${nginx_service} ${port}
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Nginx_Default'])
         nginx_service = ""
         for service_name, service in self.services.items():
             nginx_service += "\n  location /%s/ {\n" \
-                             "      proxy_pass http://%s.mirror.com:8080/;\n" \
-                             "  }" % (service_name, service_name)
-        render_template(template_file, dst_file, nginx_service=nginx_service)
+                             "      proxy_pass http://%s.mirror.com:%s/;\n" \
+                             "  }" % (service_name, service_name, str(self.port))
+        render_template(template_file, dst_file, nginx_service=nginx_service, port=self.port)
 
     def _render_nginx_config(self):
         # ${service_name}
         for service_name, service in self.services.items():
             template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Nginx_Config'])
             dst_file = string.Template(dst_file).safe_substitute(service_name=service_name)
-            render_template(template_file, dst_file, service_name=service_name)
+            render_template(template_file, dst_file, service_name=service_name, port=self.port)
 
     def _rend_index(self):
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['Index'])
@@ -220,5 +182,5 @@ class GitMirror(DevSpaceServer):
         template_file, dst_file = self.get_paths(*TEMPLATES_TO_RENDER['DockerCompose'])
         with open(template_file, 'rb') as fp:
             raw = fp.read().decode('utf8')
-            content = string.Template(raw).safe_substitute(server_name=self.server_name,port=self.port)
+            content = string.Template(raw).safe_substitute(server_name=self.server_name, port=self.port)
         return content if content else ''

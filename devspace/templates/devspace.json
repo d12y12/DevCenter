@@ -69,6 +69,25 @@
           }
         }
       }
+    },
+    "doc-${project}": {
+      "port": 8090,
+      "type": "Doc-alpine",
+      "localization": true,
+      "services": {
+        "note": {
+          "builder": "sphnix",
+          "source": "https://github.com/d12y12/notes.git"
+        },
+        "yocto-docs": {
+          "builder": "docbook",
+          "source": "Z:/yocto-docs"
+        },
+        "test": {
+          "builder": "",
+          "source": "E:/Git/crops"
+        }
+      }
     }
   }
 }

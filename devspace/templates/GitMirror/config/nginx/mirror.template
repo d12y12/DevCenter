@@ -1,5 +1,5 @@
 server {
-  listen 8080;
+  listen ${port};
   server_name ${service_name}.mirror.com;
     
   access_log /var/log/nginx/${service_name}/access.log;

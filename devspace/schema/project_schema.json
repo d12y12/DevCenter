@@ -36,7 +36,8 @@
         "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,20})$": {
           "oneOf": [
             {
-              "$ref": "gitmirror_schema.json"
+              "$ref": "gitmirror_schema.json",
+              "$ref": "doc_schema.json"
             }
           ]
         }
