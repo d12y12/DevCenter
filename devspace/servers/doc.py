@@ -90,7 +90,7 @@ class Doc(DevSpaceServer):
                 if isdir(service['source']):
                     copytree(service['source'], service_dir)
                 else:
-                    ret = subprocess.run(["git", "clone", "--mirror", service['source'], service_dir], stdout=subprocess.DEVNULL)
+                    ret = subprocess.run(["git", "clone",  service['source'], service_dir], stdout=subprocess.DEVNULL)
                     if ret.returncode != 0:
                         raise RuntimeError("can't clone {}".format(service['source']))
             else:
