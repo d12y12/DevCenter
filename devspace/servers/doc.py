@@ -86,7 +86,7 @@ class Doc(DevSpaceServer):
         for service_name, service in self.services.items():
             service_dir = join(data_dir, service_name)
             os.makedirs(service_dir, exist_ok=True)
-            if len(os.listdir(service_dir)) == 0:
+            if len(os.listdir(service_dir)) == 0 and service['source']:
                 if isdir(service['source']):
                     copytree(service['source'], service_dir)
                 else:
