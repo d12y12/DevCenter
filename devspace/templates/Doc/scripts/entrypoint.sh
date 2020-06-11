@@ -31,4 +31,9 @@ if [ "$distribution" = "alpine" ]; then
 
   adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid $USER_ID yang
   exec su-exec yang "$@"
+else
+  /usr/sbin/nginx
+
+  useradd --shell /bin/bash -u $USER_ID -o -c "" -m yang
+  exec /usr/sbin/gosu yang "$@"
 fi

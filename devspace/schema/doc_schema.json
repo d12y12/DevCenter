@@ -11,7 +11,7 @@
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["Doc-alpine"]
+      "enum": ["Doc-debian", "Doc-alpine"]
     },
     "port": {
       "type": "integer",

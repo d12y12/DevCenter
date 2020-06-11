@@ -23,7 +23,7 @@ TEMPLATES_TO_RENDER = {
 
 class Doc(DevSpaceServer):
     type = 'Doc'
-    image_support = ['alpine']
+    image_support = ['debian', 'alpine']
 
     def _render_dockerfile(self):
         # ${image} ${maintainer}, ${port}
@@ -47,7 +47,10 @@ class Doc(DevSpaceServer):
         for service_name, service in self.services.items():
             builder.append(service['builder'])
         if "docbook" in builder:
-            docbook_builder = "libxslt \\"
+            if self.image == 'alpine':
+                docbook_builder = "libxslt \\"
+            else:
+                docbook_builder = "xsltproc \\"
         if "sphnix" in builder:
             sphnix_builder = "&& pip3 install --no-cache-dir sphinx sphinx_rtd_theme recommonmark \\"
         template_file = string.Template(template_file).safe_substitute(image=self.image)
