@@ -16,6 +16,7 @@ ${localization_tz}
                        git \
                        cron \
                        curl \
+                       make \
                        gosu \
                        vim \
                        procps \
