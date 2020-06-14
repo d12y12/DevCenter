@@ -1,9 +1,9 @@
-${server_name}:
+web:
     build: 
       context: ./servers/Web
       dockerfile: Dockerfile
-    image: Web
-    container_name: Web
+    image: ${server_name}
+    container_name: ${server_name}
     restart: always
     ports:
       - "${port}:${port}"

@@ -196,10 +196,12 @@ class Web(DevSpaceServer):
         template_file = self.templates_mapping['DockerCompose'][0]
         with open(template_file, 'rb') as fp:
             raw = fp.read().decode('utf8')
-            content = string.Template(raw).safe_substitute(server_name=self.server_name, port=self.port)
+            content = string.Template(raw).safe_substitute(
+                server_name=(self.settings['project']['name'] +'_' + self.server_name).lower(),
+                port=self.port)
         service_content = yaml.safe_load(content)
         for service_name, service in self.services.items():
             if 'cgit_options' in service.keys():
-                service_content['Web']['volumes'].append('./data/{}:/srv/git/{}:ro'.format(service_name, service_name))
+                service_content['web']['volumes'].append('./data/{}:/srv/git/{}:ro'.format(service_name, service_name))
         content = yaml.safe_dump(service_content)
         return content if content else ''

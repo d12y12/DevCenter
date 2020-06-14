@@ -109,7 +109,7 @@ class DevSpaceServer:
         service_content = yaml.safe_load(self.generate_docker_compose_service())
         if not docker_compose_content['services']:
             docker_compose_content['services'] = {}
-        docker_compose_content['services'][self.server_name] = service_content[self.server_name]
+        docker_compose_content['services'][self.server_name.lower()] = service_content[self.server_name.lower()]
         with open(docker_compose_file, 'w') as f:
             document = yaml.dump(docker_compose_content, f, Dumper=PrettyDumper,
                                  default_flow_style=False, sort_keys=False)
