@@ -109,7 +109,7 @@ class Web(DevSpaceServer):
                 if 'autoindex' in service.keys() and service['autoindex']:
                     index = "autoindex on;"
                 nginx_service += "\n  location /%s/ {\n" \
-                                 "      root  /var/www/services/%s;\n" \
+                                 "      alias /var/www/services/%s;\n" \
                                  "      %s\n" \
                                  "  }" % (service_name, service_name, index)
 
@@ -131,9 +131,9 @@ class Web(DevSpaceServer):
         cgit_services = "<li>Cgit services\n<ul>"
         for service_name, service in self.services.items():
             if 'cgit_options' in service.keys():
-                cgit_services += '<li><a href="/%s">%s</a></li>\n' % (service_name, service_name)
+                cgit_services += '<li><a href="/%s/">%s</a></li>\n' % (service_name, service_name)
             else:
-                services += '<li><a href="/%s">%s</a></li>\n' % (service_name, service_name)
+                services += '<li><a href="/%s/">%s</a></li>\n' % (service_name, service_name)
         services += "</ul>\n</li>\n" + cgit_services + "</ul>\n</li>\n"
         render_template(template_file, dst_file, services=services)
 

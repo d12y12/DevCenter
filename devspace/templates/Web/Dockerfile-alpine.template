@@ -5,6 +5,7 @@ ${maintainer}
 ENV LANG=C.UTF-8
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY logo.txt /logo.txt
 
 RUN set -x \
 ${localization_distros_mirror}
