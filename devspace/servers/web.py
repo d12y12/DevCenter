@@ -183,7 +183,6 @@ class Web(DevSpaceServer):
             os.makedirs(join(data_dir, service_name), exist_ok=True)
 
     def render(self):
-        print("render web")
         self.create_server_structure()
         self.dockerfile()
         self.cgit_config()
