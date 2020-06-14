@@ -1,0 +1,16 @@
+${server_name}:
+    build: 
+      context: ./servers/Web
+      dockerfile: Dockerfile
+    image: Web
+    container_name: Web
+    restart: always
+    ports:
+      - "${port}:${port}"
+    volumes:
+      - './servers/Web/config/nginx:/etc/nginx/sites-enabled:ro'
+      - './servers/Web/config/cgit:/etc/cgitrc.d:ro'
+      - './www:/var/www:ro'
+      - './log/Web:/var/log/nginx'
+    networks:
+      - default

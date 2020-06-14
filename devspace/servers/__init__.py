@@ -6,10 +6,8 @@ import json
 import yaml
 import string
 from os.path import join, normpath
-from jsonschema import validate, RefResolver
-from devspace.settings import Settings
 from devspace.exceptions import ConfigurationError
-from devspace.utils.misc import get_path_uri, get_project_dir, get_project_host, get_project_author
+from devspace.utils.misc import render_template
 
 
 class PrettyDumper(yaml.SafeDumper):
@@ -25,63 +23,36 @@ class PrettyDumper(yaml.SafeDumper):
 class DevSpaceServer:
 
     type = ''
-    image_support = ['debian', 'alpine', 'ubuntu']
+    image_support = ['debian', 'alpine']
 
-    def __init__(self, server_settings=None):
-        self.server_name = ''
+    def __init__(self, project_settings=None):
+        self.server_name = self.__class__.__name__
         self.image = ''
-        self.port = -1
-        self.services = []
-        self.settings = Settings()
+        self.services = {}
         self.localization = False
-        self.host = get_project_host()
-        self.author = get_project_author()
-        self.settings.set('project_dir', get_project_dir())
-        if server_settings:
-            self.load_settings(server_settings)
+        if not project_settings:
+            raise ValueError("project setting is need for init server")
+        self.settings = project_settings
+        self.templates_mapping = {}
+        self.load_settings()
 
-    def valid_settings(self, server_settings):
-        try:
-            if isinstance(server_settings, str):
-                server_settings = json.loads(server_settings)
-            server_name = list(server_settings.keys())[0]
-            server_settings = server_settings[server_name]
-            schema_dir = self.settings.get('SCHEMA_DIR', '')
-            schema_name = self.type.lower() + '_schema.json'
-            schema_file = os.path.join(schema_dir, schema_name)
-            with open(schema_file, 'r') as f:
-                schema = json.load(f)
-            resolver = RefResolver(get_path_uri(schema_dir), schema)
-            validate(instance=server_settings, schema=schema, resolver=resolver)
-        except Exception as e:
-            raise ConfigurationError(e)
-
-    def load_settings(self, server_settings):
-        if isinstance(server_settings, str):
-            server_settings = json.loads(server_settings)
-        self.valid_settings(server_settings)
-        self.server_name = list(server_settings.keys())[0]
+    def load_settings(self):
+        server_settings = self.settings['servers']
         self.localization = server_settings[self.server_name]['localization']
-        self.services = server_settings[self.server_name]['services']
-        self.port = server_settings[self.server_name]['port']
-        self.image = server_settings[self.server_name]['type'].split('-')[1]
+        self.image = server_settings[self.server_name]['type']
         if self.image not in self.image_support:
             raise ConfigurationError("Not support image {}. \n"
                                      "Support images: {}".format(self.image, self.image_support))
 
-    def get_paths(self, *template_to_render):
-        template_dir = self.settings.get("TEMPLATES_DIR", "")
-        project_dir = self.settings.get("project_dir", "")
-        if not template_dir or not project_dir:
-            raise ValueError("Can't get Template or Project directory from setting")
-        template_file = join(template_to_render[0], template_to_render[1])
-        dst_file = join(template_to_render[0], template_to_render[2])
-        template_file = string.Template(template_file).safe_substitute(prefix_dir=template_dir,
-                                                                       name=self.__class__.__name__)
-        dst_file = string.Template(dst_file).safe_substitute(prefix_dir=project_dir, name=self.server_name)
-        return normpath(template_file), normpath(dst_file)
-
-    def get_localizations(self, tz=True, distros=True, python=True):
+    def dockerfile(self, tz=True, distros=True, python=True):
+        # ${image} ${maintainer}, ${localization_distros_mirror}, ${localization_tz}, ${localization_python_mirror}
+        template_file = self.templates_mapping['Dockerfile'][0]
+        dst_file = self.templates_mapping['Dockerfile'][1]
+        image = self.settings.get("IMAGE_{}".format(self.image.upper()), "")
+        if not image:
+            raise ValueError("Can't get image base from setting")
+        maintainer = 'LABEL maintainer="%s"' % self.settings.get("maintainer", "") if \
+            self.settings.get("maintainer", "") else ""
         localization_distros_mirror = ""
         localization_tz = ""
         localization_python_mirror = ""
@@ -116,18 +87,11 @@ class DevSpaceServer:
             localization_python_mirror = "# change pip source to local\n"
             localization_python_mirror += "    && pip3 config set global.index-url {} \\\n".format(local_python_mirror)
             localization_python_mirror += "    # install python packages"
-        return {
-            "tz": localization_tz,
-            "distros": localization_distros_mirror,
-            "python": localization_python_mirror
-        }
 
-    def check_duplicate_service_name(self):
-        service_names = []
-        for service_name, service in self.services.items():
-            if service_name in service_names:
-                raise ValueError("Wrong service_name")
-            service_names.append(service_name)
+        template_file = string.Template(template_file).safe_substitute(image=self.image)
+        render_template(template_file, dst_file, image=image, maintainer=maintainer,
+                        localization_distros_mirror=localization_distros_mirror, localization_tz=localization_tz,
+                        localization_python_mirror=localization_python_mirror)
 
     def render(self):
         raise NotImplementedError

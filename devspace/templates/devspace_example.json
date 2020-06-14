@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "maintainer": "yang <d12y12@hotmail.com>",
+  "maintainer": "",
   "project": {
-    "name": "demo",
-    "path": "E:/Git/DevSpace/workdir"
+    "name": "",
+    "path": ""
   },
   "servers": {
     "Web": {
-      "host": "192.168.0.108",
+      "host": "",
       "port": 8888,
       "type": "alpine",
       "localization": true
@@ -33,8 +33,8 @@
           "description": "",
           "max-repo-count": 50,
           "logo": {
-            "light": "E:/Git/DevSpace/devspace/templates/example/yocto-logo-light.png",
-            "dark": "E:/Git/DevSpace/devspace/templates/example/yocto-logo-dark.png"
+            "light": "${template_dir}/example/yocto-logo-light.png",
+            "dark": "${template_dir}/example/yocto-logo-dark.png"
           }
         }
       },
@@ -63,8 +63,8 @@
           "description": "",
           "max-repo-count": 50,
           "logo": {
-            "light": "E:/Git/DevSpace/devspace/templates/example/github-logo-light.png",
-            "dark": "E:/Git/DevSpace/devspace/templates/example/github-logo-dark.png"
+            "light": "${template_dir}/example/github-logo-light.png",
+            "dark": "${template_dir}/example/github-logo-dark.png"
           }
         }
       },
@@ -89,7 +89,8 @@
       }
     },
     "note": {
-      "Web": {},
+      "Web": {
+      },
       "DocBuilder": {
         "builder": "sphinx",
         "source": "https://github.com/d12y12/notes.git",

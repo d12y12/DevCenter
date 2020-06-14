@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import os
 import json
 import string
-from shutil import ignore_patterns, copy2
+from shutil import copy2
 import devspace
 from devspace.commands import DevSpaceCommand
 from devspace.exceptions import UsageError
-from devspace.utils.misc import arglist_to_dict, copytree, get_project_settings, get_host_ip, name_validator
-from devspace.servers.gitmirror import GitMirror
+from devspace.utils.misc import arglist_to_dict, get_host_ip, name_validator
 
 
 class Command(DevSpaceCommand):
@@ -25,8 +23,8 @@ class Command(DevSpaceCommand):
 
     def add_options(self, parser):
         DevSpaceCommand.add_options(self, parser)
-        parser.add_option("--projectonly", dest="projectonly", action="store_true",
-                          help="Create project without add any servers")
+        parser.add_option("--example", dest="example", action="store_true",
+                          help="Create an example project")
         parser.add_option("-e", "--extra", dest="spargs", action="append", default=[], metavar="NAME=VALUE",
                          help="additional information about author or version")
 
@@ -65,45 +63,35 @@ class Command(DevSpaceCommand):
             self.exitcode = 1
             return
 
-        author = opts.spargs['author'] if opts.spargs and 'author' in opts.spargs else ""
-        version = opts.spargs['version'] if opts.spargs and 'version' in opts.spargs else "1.0.0"
+        maintainer = opts.spargs['maintainer'] if opts.spargs and 'maintainer' in opts.spargs else ""
 
-        if opts.projectonly:
-            config = {
-                "project": project_name,
-                "author": author,
-                "version": version,
-                "project_dir": project_dir,
-                "host": get_host_ip(),
-                "servers": []
-            }
-            with open(os.path.join(project_dir, 'devspace.json'), 'w', encoding="utf-8") as f:
-                json.dump(config, f, indent=2, ensure_ascii=False)
-            copy2(os.path.join(self.templates_dir, 'docker-compose.yaml'),
-                  os.path.join(project_dir, 'docker-compose.yaml'))
-            print("New DevSpace project %r, created in:" % (project_name))
-            print("    %s\n" % os.path.abspath(project_dir))
-        else:
-            copy2(os.path.join(self.templates_dir, 'devspace.json'), os.path.join(project_dir, 'devspace.json'))
-            copy2(os.path.join(self.templates_dir, 'docker-compose.yaml'),
-                  os.path.join(project_dir, 'docker-compose.yaml'))
-            with open(os.path.join(project_dir, 'devspace.json'), 'r', encoding="utf-8") as f:
-                config = json.load(f)
-            config['project'] = project_name
-            config['author'] = author
-            config['version'] = version
-            config['project_dir'] = project_dir
-            config['host'] = get_host_ip()
+        copy2(os.path.join(self.templates_dir, 'devspace.json'), os.path.join(project_dir, 'devspace.json'))
+        with open(os.path.join(project_dir, 'devspace.json'), 'r', encoding="utf-8") as f:
+            config = json.load(f)
+        config['project']['name'] = project_name
+        config['maintainer'] = maintainer
+        config['project']['path'] = project_dir
+
+        if opts.example:
+            with open(os.path.join(self.templates_dir, 'devspace_example.json'), 'r', encoding="utf-8") as f:
+                template = json.load(f)
+            config['servers'] = template["servers"]
+            config['services'] = template["services"]
+            config['servers']['Web']['host'] = get_host_ip()
             config = json.loads(string.Template(json.dumps(config)).substitute(
-                template_dir=os.path.normpath(self.templates_dir).replace('\\', '/'), project=project_name))
-            with open(os.path.join(project_dir, 'devspace.json'), 'w', encoding="utf-8") as f:
-                json.dump(config, f, indent=2, ensure_ascii=False)
-            self.settings.set_dict(json.dumps(config))
-            print("New DevSpace project %r, created in:" % (project_name))
-            print("    %s\n" % os.path.abspath(project_dir))
+                template_dir=os.path.normpath(self.templates_dir).replace('\\', '/')))
+
+        with open(os.path.join(project_dir, 'devspace.json'), 'w', encoding="utf-8") as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+        copy2(os.path.join(self.templates_dir, 'docker-compose.yaml'),
+              os.path.join(project_dir, 'docker-compose.yaml'))
+
+        print("New DevSpace project {}, created in:".format(project_name))
+        print("    {}\n".format(os.path.abspath(project_dir)))
+        if opts.example:
             print("You can start example server with:")
-            print("    cd %s" % os.path.abspath(project_dir))
-            print("    devspace render demo")
+            print("    cd {}".format(os.path.abspath(project_dir)))
+            print("    devspace render <server>")
             print("    devspace run")
 
     @property

@@ -114,10 +114,11 @@ def execute(argv=None, settings=None):
 
     inproject = inside_project()
     if inproject:
-        get_project_settings(settings)
+        if not get_project_settings(settings):
+            sys.exit(2)
     cmds = _get_commands_dict(settings, inproject)
     cmdname = _pop_command_name(argv)
-    parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), \
+    parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(),
         conflict_handler='resolve')
     if not cmdname:
         _print_commands(settings, inproject)

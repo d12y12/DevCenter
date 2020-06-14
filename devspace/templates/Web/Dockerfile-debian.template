@@ -1,0 +1,40 @@
+FROM ${image}
+
+${maintainer}
+
+ENV LANG=C.UTF-8
+
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN set -x \
+${localization_distros_mirror}
+${localization_tz}
+# install packages
+    && apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y \
+                       fcgiwrap \
+                       nginx \
+                       cgit=1.2.1+git2.18.0-1 \
+                       git \
+                       curl \
+                       vim \
+                       procps \
+                       python3 \
+                       python3-pip \
+    ${localization_python_mirror}
+    && pip3 install --no-cache-dir pygments markdown docutils \
+# clean up
+    && rm -rf /var/lib/apt/lists/* \
+# configure cgit
+    && echo "include=/etc/cgitrc.d/\$HTTP_HOST" > /etc/cgitrc \
+# configure entrypint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /var/www
+
+EXPOSE ${port}
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
+HEALTHCHECK --interval=5m --timeout=3s --start-period=1m \
+            CMD curl -sSLf http://localhost:${port} >/dev/null || exit 1

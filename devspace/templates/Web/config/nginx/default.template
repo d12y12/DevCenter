@@ -1,0 +1,12 @@
+server {
+  listen ${port};
+  server_name localhost;
+  
+  location / {
+    root  /var/www;
+    index index.html;
+  }
+${nginx_service}
+
+}
+

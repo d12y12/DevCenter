@@ -26,6 +26,12 @@ IMAGE_ALPINE = "alpine:3.12"
 IMAGE_DEBIAN = "debian:buster-slim"
 IMAGE_UBUNTU = ""
 
-# Directories
+
+# Directories and Files
 TEMPLATES_DIR = abspath(join(dirname(__file__), '..', 'templates'))
 SCHEMA_DIR = abspath(join(dirname(__file__), '..', 'schema'))
+PROJECT_SCHEMA = join(SCHEMA_DIR, "project_schema.json")
+SHARED_WEB = "${PROJECT_DIR}/www"
+SHARED_DATA = "${PROJECT_DIR}/data"
+SHARED_LOG = "${PROJECT_DIR}/log"
+CGIT_STATICS = join(SHARED_WEB, 'cgit')

@@ -3,43 +3,65 @@
   "$id": "project_schema.json",
   "type": "object",
   "required": [
-    "project",
     "version",
-    "author",
-    "project_dir",
-    "host",
-    "servers"
+    "maintainer",
+    "project",
+    "servers",
+    "services"
   ],
   "properties": {
-    "project": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 10,
-      "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d]))*)$"
-    },
     "version": {
       "type": "string"
     },
-    "author": {
+    "maintainer": {
       "type": "string"
     },
-    "project_dir": {
-      "type": "string"
-    },
-    "host": {
-      "type": "string"
+    "project": {
+      "$id": "#/properties/project",
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10,
+          "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d]))*)$"
+        },
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "main": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "servers": {
       "$id": "#/properties/servers",
+      "$ref": "#/definitions/servers"
+    },
+    "services": {
+      "$id": "#/properties/services",
       "type": "object",
       "patternProperties": {
-        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,20})$": {
-          "oneOf": [
-            {
-              "$ref": "gitmirror_schema.json",
-              "$ref": "doc_schema.json"
-            }
-          ]
+        "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
+              "$ref": "#/definitions/services"
         }
       },
       "additionalProperties": false
@@ -47,5 +69,297 @@
   },
   "additionalProperties": false,
   "definitions": {
+    "general_server": {
+      "$id": "#/definitions/general_server",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "debian",
+            "alpine"
+          ]
+        },
+        "localization": {
+          "type": "boolean"
+        }
+      }
+    },
+    "servers": {
+      "$id": "#/definitions/servers",
+      "type": "object",
+      "properties": {
+        "Web": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/general_server"
+            },
+            {
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer",
+                  "minimum": 8000,
+                  "maximum": 9000
+                }
+              },
+              "required": [
+                "host",
+                "port"
+              ]
+            }
+          ]
+        },
+        "GitMirror": {
+          "$ref": "#/definitions/general_server"
+        },
+        "DocBuilder": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/general_server"
+            },
+            {
+              "properties": {
+                "builder": {
+                  "type": "array",
+                  "maxItems": 2,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "docbook",
+                      "sphinx"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "builder"
+              ]
+            }
+          ]
+        },
+        "YoctoBuilder": {
+          "$ref": "#/definitions/general_server"
+        },
+        "YoctoToaster": {
+          "$ref": "#/definitions/general_server"
+        },
+        "YoctoESDK": {
+          "$ref": "#/definitions/general_server"
+        }
+      },
+      "additionalProperties": false
+    },
+    "services": {
+      "$id": "#/definitions/services",
+      "type": "object",
+      "properties": {
+        "Web": {
+          "$ref": "#/definitions/web_service"
+        },
+        "GitMirror": {
+          "$ref": "#/definitions/gitmirror_service"
+        },
+        "DocBuilder": {
+          "$ref": "#/definitions/docbuilder_service"
+        },
+        "Synchronization": {
+          "$ref": "#/definitions/synchronization"
+        }
+      },
+      "additionalProperties": false
+    },
+    "web_service": {
+      "$id": "#/definitions/web_service",
+      "type": "object",
+      "properties": {
+        "cgit_options": {
+          "$ref": "#/definitions/cgit_options"
+        },
+        "autoindex": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gitmirror_service": {
+      "$id": "#/definitions/gitmirror_service",
+      "type": "object",
+      "required": [
+        "cgit",
+        "github"
+      ],
+      "properties": {
+        "cgit": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cgit_repository"
+          },
+          "uniqueItems": true
+        },
+        "github": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/github_repository"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "docbuilder_service": {
+      "$id": "#/definitions/docbuilder_service",
+      "type": "object",
+      "required": [
+        "builder",
+        "source",
+        "output"
+      ],
+      "properties": {
+        "builder": {
+          "type": "string",
+          "enum": ["docbook", "sphinx", ""]
+        },
+        "source": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "synchronization": {
+      "$id": "#/definitions/synchronization",
+      "type": "object",
+      "required": [
+        "consistency",
+        "crontab"
+      ],
+      "properties": {
+        "consistency": {
+          "type": "boolean"
+        },
+        "crontab": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cgit_options": {
+      "$id": "#/definitions/cgit_options",
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "max-repo-count"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "max-repo-count": {
+          "type": "integer"
+        },
+        "logo": {
+          "type": "object",
+          "required": [
+            "light",
+            "dark"
+          ],
+          "properties": {
+            "light": {
+              "type": "string"
+            },
+            "dark": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cgit_repository": {
+      "$id": "#/definitions/cgit_repository",
+      "type": "object",
+      "required": [
+        "source",
+        "excludes",
+        "targets"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^(https?)://"
+        },
+        "excludes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^(https?)://"
+          },
+          "uniqueItems": true
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^(https?)://"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "github_repository": {
+      "$id": "#/definitions/github_repository",
+      "type": "object",
+      "required": [
+        "source",
+        "excludes",
+        "targets"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minimum": 1,
+          "maximum": 140,
+          "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38})(\/[\\w.-]{1,100})?$"
+        },
+        "excludes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minimum": 1,
+            "maximum": 140,
+            "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38})(\/[\\w.-]{1,100})?$"
+          },
+          "uniqueItems": true
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^(https?)://"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }

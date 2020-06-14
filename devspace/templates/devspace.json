@@ -1,93 +1,12 @@
 {
-  "project": "",
-  "version": "",
-  "author": "",
-  "project_dir": "",
-  "host": "",
+  "version": "1.0",
+  "maintainer": "",
+  "project": {
+    "name": "",
+    "path": ""
+  },
   "servers": {
-    "gitmirror-${project}": {
-      "port": 8080,
-      "type": "GitMirror-alpine",
-      "localization": true,
-      "services": {
-        "yocto": {
-          "cgit_options": {
-            "title": "Mirror Repositories",
-            "description": "",
-            "max-repo-count": 50,
-            "logo": {
-              "light": "${template_dir}/example/yocto-logo-light.png",
-              "dark": "${template_dir}/example/yocto-logo-dark.png"
-            }
-          },
-          "synchronization": {
-            "consistency": true,
-            "crontab": "*/5 * * * *"
-          },
-          "repositories": {
-            "cgit": [
-              {
-                "source": "http://git.yoctoproject.org/cgit.cgi/crops/",
-                "excludes": [
-                  "http://git.yoctoproject.org/cgit.cgi/yocto-testresults/",
-                  "http://git.yoctoproject.org/cgit.cgi/yp-qa-build-perf-data/"
-                ],
-                "targets": []
-              }
-            ],
-            "github": []
-          }
-        },
-        "github": {
-          "cgit_options": {
-            "title": "Mirror Repositories",
-            "description": "",
-            "max-repo-count": 50,
-            "logo": {
-              "light": "${template_dir}/example/github-logo-light.png",
-              "dark": "${template_dir}/example/github-logo-dark.png"
-            }
-          },
-          "synchronization": {
-            "consistency": true,
-            "crontab": "*/5 * * * *"
-          },
-          "repositories": {
-            "cgit": [],
-            "github": [
-              {
-                "source": "d12y12/temp",
-                "excludes": [],
-                "targets": []
-              },
-              {
-                "source": "scrapy/scrapy",
-                "excludes": [],
-                "targets": []
-              }
-            ]
-          }
-        }
-      }
-    },
-    "doc-${project}": {
-      "port": 8090,
-      "type": "Doc-alpine",
-      "localization": true,
-      "services": {
-        "note": {
-          "builder": "sphnix",
-          "source": "https://github.com/d12y12/notes.git"
-        },
-        "yocto-docs": {
-          "builder": "docbook",
-          "source": "Z:/yocto-docs"
-        },
-        "test": {
-          "builder": "",
-          "source": "E:/Git/crops"
-        }
-      }
-    }
+  },
+  "services": {
   }
 }

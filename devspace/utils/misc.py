@@ -10,6 +10,7 @@ import re
 from urllib.parse import urlsplit
 import json
 import socket
+import jsonschema
 from shutil import copy2, copystat
 
 
@@ -87,9 +88,24 @@ def find_project_config(path='.', prev_path=None):
 def get_project_settings(settings=None):
     conf_file = find_project_config()
     if settings and conf_file:
-        with open(conf_file, 'r', encoding="utf-8") as f:
-            values = f.read()
-            settings.set_dict(values)
+        schema_file = settings.get('PROJECT_SCHEMA', '')
+        if not schema_file:
+            print("Can't get schema file from setting")
+            return False
+        with open(schema_file, 'r') as f:
+            schema = json.load(f)
+        with open(conf_file, 'r') as f:
+            data = json.load(f)
+        try:
+            jsonschema.validate(instance=data, schema=schema)
+            with open(conf_file, 'r', encoding="utf-8") as f:
+                values = f.read()
+                settings.set_dict(values)
+            return True
+        except jsonschema.exceptions.ValidationError as e:
+            print("Wrong project file format: \n {}".format(e.message))
+            return False
+    return False
 
 
 def get_project_dir():
@@ -107,12 +123,12 @@ def get_project_host():
         return ''
 
 
-def get_project_author():
+def get_project_maintainer():
     conf_file = find_project_config()
     if conf_file:
         with open(conf_file, 'r', encoding="utf-8") as f:
             config = json.load(f)
-            return config['author']
+            return config['maintainer']
     else:
         return ''
 

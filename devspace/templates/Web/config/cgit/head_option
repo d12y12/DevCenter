@@ -1,0 +1,3 @@
+<script src="/cgit/js/jquery-3.5.0.min.js"></script>
+<script src="/cgit/js/magic.js"></script>
+<script type="text/javascript">magic()</script>

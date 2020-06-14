@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
+import os
 import json
+import string
 from importlib import import_module
 from devspace.utils.misc import walk_modules
 from devspace.exceptions import ConfigurationError
@@ -51,6 +53,21 @@ class Settings:
             if values is not None:
                 for name, value in values.items():
                     self.set(name, value)
+                    if name == "project":
+                        if isinstance(value['path'], str):
+                            project_dir = value['path']
+                            self.attributes['SHARED_WEB'] = os.path.normpath(
+                                string.Template(self.attributes['SHARED_WEB']).substitute(PROJECT_DIR=project_dir)).\
+                                replace('\\', '/')
+                            self.attributes['SHARED_DATA'] = os.path.normpath(
+                                string.Template(self.attributes['SHARED_DATA']).substitute(PROJECT_DIR=project_dir)). \
+                                replace('\\', '/')
+                            self.attributes['SHARED_LOG'] = os.path.normpath(
+                                string.Template(self.attributes['SHARED_LOG']).substitute(PROJECT_DIR=project_dir)). \
+                                replace('\\', '/')
+                            self.attributes['CGIT_STATICS'] = os.path.normpath(
+                                string.Template(self.attributes['CGIT_STATICS']).substitute(PROJECT_DIR=project_dir)). \
+                                replace('\\', '/')
 
     def get(self, name, default=None):
         return self[name] if self[name] is not None else default
