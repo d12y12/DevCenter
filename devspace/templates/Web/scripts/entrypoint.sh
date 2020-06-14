@@ -41,7 +41,7 @@ create_cache_dir()
 # Main                                 #
 ########################################
 
-display_log /logo.txt
+display_logo /logo.txt
 
 distribution=$(grep '^ID=' /etc/os-release | sed 's/ID=\(.*\)/\1/g')
 if [ -z "$distribution" ]; then
