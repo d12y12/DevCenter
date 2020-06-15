@@ -4,7 +4,7 @@ ${maintainer}
 
 ENV LANG=C.UTF-8
 
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/entrypoint-cron.sh /usr/local/bin/entrypoint.sh
 COPY logo.txt /logo.txt
 
 RUN set -x \
@@ -14,6 +14,8 @@ ${localization_tz}
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
                        git \
+                       cron \
+                       gosu \
                        vim \
                        procps \
                        python3 \
@@ -23,11 +25,8 @@ ${localization_tz}
 # clean up
     && rm -rf /var/lib/apt/lists/* \
 # configure entrypint.sh
-    && chmod +x /usr/local/bin/entrypoint.sh \
-# add user
-    && useradd --shell /bin/bash -u 1000 -o -c "" -m yang
+    && chmod +x /usr/local/bin/entrypoint.sh
 
-USER yang
 WORKDIR /apps
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

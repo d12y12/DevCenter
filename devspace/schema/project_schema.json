@@ -61,7 +61,7 @@
       "type": "object",
       "patternProperties": {
         "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,9})$": {
-              "$ref": "#/definitions/services"
+          "$ref": "#/definitions/services"
         }
       },
       "additionalProperties": false
@@ -209,6 +209,9 @@
             "$ref": "#/definitions/github_repository"
           },
           "uniqueItems": true
+        },
+        "synchronization": {
+          "$ref": "#/definitions/synchronization"
         }
       },
       "additionalProperties": false
@@ -224,7 +227,11 @@
       "properties": {
         "builder": {
           "type": "string",
-          "enum": ["docbook", "sphinx", ""]
+          "enum": [
+            "docbook",
+            "sphinx",
+            ""
+          ]
         },
         "source": {
           "type": "string"

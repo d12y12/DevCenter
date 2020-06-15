@@ -49,11 +49,11 @@
             "targets": []
           }
         ],
-        "github": []
-      },
-      "Synchronization": {
-        "consistency": true,
-        "crontab": "*/5 * * * *"
+        "github": [],
+        "synchronization": {
+          "consistency": true,
+          "crontab": "*/5 * * * *"
+        }
       }
     },
     "github": {

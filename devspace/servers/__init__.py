@@ -7,7 +7,7 @@ import yaml
 import string
 from os.path import join, normpath
 from devspace.exceptions import ConfigurationError
-from devspace.utils.misc import render_template
+from devspace.utils.misc import render_template, copytree
 
 
 class PrettyDumper(yaml.SafeDumper):
@@ -92,6 +92,16 @@ class DevSpaceServer:
         render_template(template_file, dst_file, image=image, maintainer=maintainer,
                         localization_distros_mirror=localization_distros_mirror, localization_tz=localization_tz,
                         localization_python_mirror=localization_python_mirror)
+
+    def create_server_base_structure(self, ignore):
+        template_srv_dir = join(self.settings.get("TEMPLATES_DIR", ""), self.__class__.__name__) if \
+            self.settings.get("TEMPLATES_DIR", "") else ""
+        prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name) if \
+            self.settings['project']['path'] else ""
+        if not template_srv_dir or not prj_srv_dir:
+            raise ValueError("Can't get Template or Project directory from setting")
+        os.makedirs(prj_srv_dir, exist_ok=True)
+        copytree(template_srv_dir, prj_srv_dir, ignore)
 
     def render(self):
         raise NotImplementedError

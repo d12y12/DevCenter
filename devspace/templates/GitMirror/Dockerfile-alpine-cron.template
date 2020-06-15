@@ -4,7 +4,7 @@ ${maintainer}
 
 ENV LANG=C.UTF-8
 
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/entrypoint-cron.sh /usr/local/bin/entrypoint.sh
 COPY logo.txt /logo.txt
 
 RUN set -x \
@@ -12,18 +12,18 @@ ${localization_distros_mirror}
 ${localization_tz}
 # install packages
     && apk add --no-cache \
+               busybox-suid \
                git \
+               su-exec \
                python3 \
                py3-pip \
     ${localization_python_mirror}
     && pip3 install --no-cache-dir requests beautifulsoup4 \
-# configure entrypint.sh
-    && chmod +x /usr/local/bin/entrypoint.sh \
-# add user
-    && adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid 1000 yang
 
-USER yang
+# configure entrypint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /apps
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/sh"]
+CMD ["/bin/sh", "-c", "trap : TERM INT; (while true; do sleep 1000; done) & wait"]

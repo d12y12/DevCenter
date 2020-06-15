@@ -1,20 +1,10 @@
-${server_name}:
+gitmirror:
     build: 
-      context: ./${server_name}
+      context: ./servers/GitMirror
       dockerfile: Dockerfile
     image: ${server_name}
     container_name: ${server_name}
-    restart: always
-    ports:
-      - "${port}:${port}"
     volumes:
-      - './${server_name}/config/nginx:/etc/nginx/sites-enabled'
-      - './${server_name}/config/cgit:/etc/cgitrc.d'
-      - './${server_name}/web:/var/www'
-      - './${server_name}/data:/srv/git'
-      - './${server_name}/log:/var/log/nginx'
-      - './${server_name}/apps:/apps'
+      - './servers/GitMirror/apps:/apps'
     networks:
       - default
-
-

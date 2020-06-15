@@ -152,14 +152,8 @@ class Web(DevSpaceServer):
                     copy2(src, dst_logo)
 
     def create_server_structure(self):
-        template_srv_dir = join(self.settings.get("TEMPLATES_DIR", ""), self.__class__.__name__) if \
-                                                self.settings.get("TEMPLATES_DIR", "") else ""
-        prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name) if \
-                                                self.settings['project']['path'] else ""
-        if not template_srv_dir or not prj_srv_dir:
-            raise ValueError("Can't get Template or Project directory from setting")
-        os.makedirs(prj_srv_dir, exist_ok=True)
-        copytree(template_srv_dir, prj_srv_dir, ignore_patterns('*.template', 'www'))
+        self.create_server_base_structure(ignore_patterns('*.template', 'www'))
+        template_srv_dir = join(self.settings.get("TEMPLATES_DIR", ""), self.__class__.__name__)
         # make www
         www_dir = self.settings.get("SHARED_WEB", "")
         os.makedirs(www_dir, exist_ok=True)
