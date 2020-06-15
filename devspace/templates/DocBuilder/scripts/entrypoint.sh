@@ -11,8 +11,8 @@ display_logo()
 ########################################
 # Main                                 #
 ########################################
-logo='logo.txt'
-display_logo "$logo"
+
+display_logo /logo.txt
 
 distribution=$(grep '^ID=' /etc/os-release | sed 's/ID=\(.*\)/\1/g')
 if [ -z "$distribution" ]; then
@@ -27,13 +27,9 @@ echo "Starting with UID : $USER_ID"
 
 echo "Start service"
 if [ "$distribution" = "alpine" ]; then
-  nginx
-
   adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid $USER_ID yang
   exec su-exec yang "$@"
 else
-  /usr/sbin/nginx
-
   useradd --shell /bin/bash -u $USER_ID -o -c "" -m yang
   exec /usr/sbin/gosu yang "$@"
 fi

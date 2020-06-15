@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import os
-import json
-import string
 import devspace
 from devspace.commands import DevSpaceCommand
 from devspace.exceptions import UsageError
 from devspace.utils.misc import walk_modules
 from devspace.servers import DevSpaceServer
-from devspace.utils.misc import get_host_ip
 import inspect
 
 

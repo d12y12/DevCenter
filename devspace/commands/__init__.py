@@ -4,9 +4,6 @@ Base class for DevSpace commands
 
 from optparse import OptionGroup
 
-from devspace.utils.misc import arglist_to_dict
-from devspace.exceptions import UsageError
-
 
 class DevSpaceCommand(object):
 

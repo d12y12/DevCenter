@@ -5,6 +5,7 @@ ${maintainer}
 ENV LANG=C.UTF-8
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY logo.txt /logo.txt
 
 RUN set -x \
 ${localization_distros_mirror}
@@ -12,7 +13,6 @@ ${localization_tz}
 # install packages
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
-                       nginx \
                        git \
                        cron \
                        curl \
@@ -33,9 +33,5 @@ ${localization_tz}
 
 WORKDIR /apps
 
-EXPOSE ${port}
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
-HEALTHCHECK --interval=5m --timeout=3s --start-period=1m \
-            CMD curl -sSLf http://localhost:${port} >/dev/null || exit 1
