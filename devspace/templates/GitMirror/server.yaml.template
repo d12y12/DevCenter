@@ -6,5 +6,6 @@ gitmirror:
     container_name: ${server_name}
     volumes:
       - './servers/GitMirror/apps:/apps'
+      - './log/GitMirror:/apps/log'
     networks:
       - default

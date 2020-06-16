@@ -92,6 +92,9 @@ class GitMirror(DevSpaceServer):
         os.makedirs(data_dir, exist_ok=True)
         for service_name, service in self.services.items():
             os.makedirs(join(data_dir, service_name), exist_ok=True)
+        # make log root
+        log_dir = join(self.settings.get("SHARED_LOG", ""), self.server_name)
+        os.makedirs(log_dir, exist_ok=True)
 
     def render(self):
         self.create_server_structure()
