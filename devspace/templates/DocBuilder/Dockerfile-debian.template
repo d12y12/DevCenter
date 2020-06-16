@@ -4,7 +4,6 @@ ${maintainer}
 
 ENV LANG=C.UTF-8
 
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY logo.txt /logo.txt
 
 RUN set -x \
@@ -14,10 +13,7 @@ ${localization_tz}
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
                        git \
-                       cron \
-                       curl \
                        make \
-                       gosu \
                        vim \
                        procps \
                        python3 \
@@ -27,11 +23,11 @@ ${localization_tz}
     ${sphnix_builder}
 # clean up
     && rm -rf /var/lib/apt/lists/* \
+# add user
+    && useradd --shell /bin/bash -u 1000 -o -c "" -m yang
 
-# configure entrypint.sh
-    && chmod +x /usr/local/bin/entrypoint.sh
+USER yang
+WORKDIR /docs
 
-WORKDIR /apps
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["cat", "/logo.txt"]

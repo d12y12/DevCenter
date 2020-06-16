@@ -88,7 +88,6 @@ class DocBuilder(DevSpaceServer):
     def render(self):
         self.create_server_structure()
         self.dockerfile()
-        print(self.generate_docker_compose_service())
 
     def generate_docker_compose_service(self):
         template_file = self.templates_mapping['DockerCompose'][0]
