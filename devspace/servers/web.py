@@ -109,7 +109,7 @@ class Web(DevSpaceServer):
                 if 'autoindex' in service.keys() and service['autoindex']:
                     index = "autoindex on;"
                 nginx_service += "\n  location /%s/ {\n" \
-                                 "      alias /var/www/services/%s;\n" \
+                                 "      alias /var/www/services/%s/;\n" \
                                  "      %s\n" \
                                  "  }" % (service_name, service_name, index)
 
