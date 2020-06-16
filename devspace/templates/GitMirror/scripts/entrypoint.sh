@@ -25,6 +25,6 @@ fi
 
 chmod +x gitmirror.py
 
-./gitmirror.py --init
+./gitmirror.py --help
 
 exec "$@"

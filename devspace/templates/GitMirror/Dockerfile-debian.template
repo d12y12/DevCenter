@@ -31,4 +31,4 @@ USER yang
 WORKDIR /apps
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
+CMD ["/bin/bash"]
