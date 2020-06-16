@@ -58,7 +58,7 @@ class DocBuilder(DevSpaceServer):
                 docbook_builder = "libxslt \\"
             else:
                 docbook_builder = "xsltproc \\"
-        if "sphnix" in builder:
+        if "sphinx" in builder:
             sphnix_builder = "&& pip3 install --no-cache-dir sphinx sphinx_rtd_theme recommonmark \\"
         render_template(dst_file, dst_file, docbook_builder=docbook_builder,
                         sphnix_builder=sphnix_builder)
