@@ -8,11 +8,6 @@ display_logo()
   fi
 }
 
-dispaly_usage()
-{
-  echo 'Use start.sh to start your docker which will auto-mount your services'
-}
-
 ########################################
 # Main                                 #
 ########################################
@@ -27,6 +22,14 @@ else
   echo "Distribution : $distribution"
 fi
 
-dispaly_usage
+USER_ID=${LOCAL_USER_ID:-1000}
+echo "Starting with UID : $USER_ID"
 
-exec "$@"
+echo "Start service"
+if [ "$distribution" = "alpine" ]; then
+  adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid $USER_ID yang
+  exec su-exec yang "$@"
+else
+  useradd --shell /bin/bash -u $USER_ID -o -c "" -m yang
+  exec /usr/sbin/gosu yang "$@"
+fi

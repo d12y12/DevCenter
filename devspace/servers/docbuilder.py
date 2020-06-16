@@ -18,6 +18,9 @@ TEMPLATES_MAPPING = {
                    "${project_dir}/servers/DocBuilder/Dockerfile"),
     # ${server_name}
     'DockerCompose': ('${TEMPLATES_DIR}/DocBuilder/server.yaml.template', ''),
+    # ${volume} ${container_name} ${shell}
+    'StartScript': ("${TEMPLATES_DIR}/DocBuilder/scripts/start.sh.template",
+                    "${project_dir}/servers/DocBuilder/scripts/start.sh")
 }
 
 
@@ -63,6 +66,19 @@ class DocBuilder(DevSpaceServer):
         render_template(dst_file, dst_file, docbook_builder=docbook_builder,
                         sphnix_builder=sphnix_builder)
 
+    def start_script(self):
+        src_file = self.templates_mapping['StartScript'][0]
+        dst_file = self.templates_mapping['StartScript'][1]
+        volume = ''
+        for service_name, service in self.services.items():
+           volume += '\n' + ' '*11 + '-v ./data/{}:/docs/{} \\'.format(service_name, service_name)
+           volume += '\n' + ' '*11 + '-v ./www/services/{}:/output/{} \\'.format(service_name, service_name)
+        shell = '/bin/bash'
+        if self.image == 'alpine':
+            shell = '/bin/sh'
+        render_template(src_file, dst_file, volume=volume, shell=shell,
+                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+
     def create_server_structure(self):
         self.create_server_base_structure(ignore_patterns('*.template'))
         # make www
@@ -88,6 +104,7 @@ class DocBuilder(DevSpaceServer):
     def render(self):
         self.create_server_structure()
         self.dockerfile()
+        self.start_script()
 
     def generate_docker_compose_service(self):
         template_file = self.templates_mapping['DockerCompose'][0]
@@ -95,11 +112,4 @@ class DocBuilder(DevSpaceServer):
             raw = fp.read().decode('utf8')
             content = string.Template(raw).safe_substitute(
                 server_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
-        service_content = yaml.safe_load(content)
-        service_content['docbuilder']['volumes']=[]
-        for service_name, service in self.services.items():
-            service_content['docbuilder']['volumes'].append('./data/{}:/docs/{}'.format(service_name, service_name))
-            service_content['docbuilder']['volumes'].append(
-                './www/services/{}:/output/{}'.format(service_name, service_name))
-        content = yaml.safe_dump(service_content)
         return content if content else ''

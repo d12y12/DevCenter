@@ -4,6 +4,5 @@ docbuilder:
       dockerfile: Dockerfile
     image: ${server_name}
     container_name: ${server_name}
-    volumes:
     networks:
       - default

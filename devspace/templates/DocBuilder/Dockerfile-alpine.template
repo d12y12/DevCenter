@@ -4,6 +4,7 @@ ${maintainer}
 
 ENV LANG=C.UTF-8
 
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY logo.txt /logo.txt
 
 RUN set -x \
@@ -21,11 +22,13 @@ ${localization_tz}
                ${docbook_builder}
     ${localization_python_mirror}
     ${sphnix_builder}
+# configure entrypint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh \
 # add user
     && adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid 1000 yang
 
 USER yang
 WORKDIR /docs
 
-ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["cat", "/logo.txt"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/sh"]

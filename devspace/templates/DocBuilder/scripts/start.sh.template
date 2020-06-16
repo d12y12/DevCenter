@@ -1,0 +1,5 @@
+#!/bin/sh
+
+docker run -it \${volume}
+           ${container_name} \
+           ${shell}
