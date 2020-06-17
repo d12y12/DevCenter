@@ -69,10 +69,13 @@ class DocBuilder(DevSpaceServer):
     def start_script(self):
         src_file = self.templates_mapping['StartScript'][0]
         dst_file = self.templates_mapping['StartScript'][1]
+
         volume = ''
         for service_name, service in self.services.items():
-           volume += '\n' + ' '*11 + '-v ./data/{}:/docs/{} \\'.format(service_name, service_name)
-           volume += '\n' + ' '*11 + '-v ./www/services/{}:/output/{} \\'.format(service_name, service_name)
+            volume += '\n' + ' '*11 + '-v {}/data/{}:/docs/{} \\'.format(self.settings['project']['path'],
+                                                                         service_name, service_name)
+            volume += '\n' + ' '*11 + '-v {}/www/services/{}:/output/{} \\'.format(self.settings['project']['path'],
+                                                                                   service_name, service_name)
         shell = '/bin/bash'
         if self.image == 'alpine':
             shell = '/bin/sh'
