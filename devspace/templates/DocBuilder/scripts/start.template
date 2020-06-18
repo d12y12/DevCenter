@@ -1,4 +1,4 @@
-#!/bin/sh
+${shebang}
 
 docker run -it \${volume}
            ${container_name} \

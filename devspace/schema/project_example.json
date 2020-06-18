@@ -93,7 +93,10 @@
       "DocBuilder": {
         "builder": "sphinx",
         "source": "https://github.com/d12y12/notes.git",
-        "output": "./_build"
+        "build": [
+          "make html"
+        ],
+        "publish": "./_build/html"
       },
       "Synchronization": {
         "consistency": true,
@@ -107,7 +110,15 @@
       "DocBuilder": {
         "builder": "docbook",
         "source": "Z:/yocto-docs",
-        "output": "./build"
+        "build": [
+          "rm -rf build",
+          "mkdir build",
+          "cd documentation",
+          "make DOC=sdk-manual",
+          "cp ./sdk-manual/*.tgz ../build",
+          "tar zxvf ../build/*.tgz"
+        ],
+        "publish": "./build"
       },
       "Synchronization": {
         "consistency": true,
@@ -117,9 +128,6 @@
     "test": {
       "Web": {},
       "DocBuilder": {
-        "builder": "",
-        "source": "",
-        "output": ""
       }
     }
   }

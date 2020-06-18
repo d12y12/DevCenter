@@ -9,7 +9,6 @@ from shutil import ignore_patterns
 from devspace.utils.misc import render_template, copytree
 from devspace.servers import DevSpaceServer
 import subprocess
-import yaml
 
 
 TEMPLATES_MAPPING = {
@@ -19,8 +18,8 @@ TEMPLATES_MAPPING = {
     # ${server_name}
     'DockerCompose': ('${TEMPLATES_DIR}/DocBuilder/server.yaml.template', ''),
     # ${volume} ${container_name} ${shell}
-    'StartScript': ("${TEMPLATES_DIR}/DocBuilder/scripts/start.sh.template",
-                    "${project_dir}/servers/DocBuilder/scripts/start.sh")
+    'StartScript': ("${TEMPLATES_DIR}/DocBuilder/scripts/start.template",
+                    "${project_dir}/servers/DocBuilder/scripts/start.{ext}")
 }
 
 
@@ -43,8 +42,11 @@ class DocBuilder(DevSpaceServer):
             for service_name, service_setting in self.settings['services'].items():
                 if self.__class__.__name__ in service_setting:
                     self.services[service_name] = service_setting[self.__class__.__name__]
+                    self.services[service_name]['needWeb'] = False
                     if 'builder' in service_setting[self.__class__.__name__].keys():
                         self.builder.append(service_setting[self.__class__.__name__]['builder'])
+                    if 'Web' in service_setting:
+                        self.services[service_name]['needWeb'] = True
 
     def dockerfile(self, tz=True, distros=True, python=True):
         # ${docbook_builder} ${sphnix_builder}
@@ -53,15 +55,13 @@ class DocBuilder(DevSpaceServer):
 
         docbook_builder = ""
         sphnix_builder = ""
-        builder = []
-        for service_name, service in self.services.items():
-            builder.append(service['builder'])
-        if "docbook" in builder:
+
+        if "docbook" in self.builder:
             if self.image == 'alpine':
                 docbook_builder = "libxslt \\"
             else:
                 docbook_builder = "xsltproc \\"
-        if "sphinx" in builder:
+        if "sphinx" in self.builder:
             sphnix_builder = "&& pip3 install --no-cache-dir sphinx sphinx_rtd_theme recommonmark \\"
         render_template(dst_file, dst_file, docbook_builder=docbook_builder,
                         sphnix_builder=sphnix_builder)
@@ -70,16 +70,21 @@ class DocBuilder(DevSpaceServer):
         src_file = self.templates_mapping['StartScript'][0]
         dst_file = self.templates_mapping['StartScript'][1]
 
+        dst_file_linux = string.Template(dst_file).safe_substitute(ext='sh')
+        dst_file_win = string.Template(dst_file).safe_substitute(ext='bat')
         volume = ''
         for service_name, service in self.services.items():
             volume += '\n' + ' '*11 + '-v {}/data/{}:/docs/{} \\'.format(self.settings['project']['path'],
                                                                          service_name, service_name)
-            volume += '\n' + ' '*11 + '-v {}/www/services/{}:/output/{} \\'.format(self.settings['project']['path'],
-                                                                                   service_name, service_name)
+            if service['needWeb']:
+                volume += '\n' + ' '*11 + '-v {}/www/services/{}:/share/{} \\'.format(self.settings['project']['path'],
+                                                                                      service_name, service_name)
         shell = '/bin/bash'
         if self.image == 'alpine':
             shell = '/bin/sh'
-        render_template(src_file, dst_file, volume=volume, shell=shell,
+        render_template(src_file, dst_file_linux, volume=volume, shebang='#!/bin/sh', shell=shell,
+                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+        render_template(src_file, dst_file_win, volume=volume, shebang='', shell=shell,
                         container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
 
     def create_server_structure(self):
@@ -94,7 +99,7 @@ class DocBuilder(DevSpaceServer):
             service_dir = join(data_dir, service_name)
             os.makedirs(service_dir, exist_ok=True)
             os.makedirs(join(www_dir, 'services', service_name), exist_ok=True)
-            if len(os.listdir(service_dir)) == 0 and service['source']:
+            if len(os.listdir(service_dir)) == 0 and 'source' in service and service['source']:
                 if isdir(service['source']):
                     copytree(service['source'], service_dir)
                 else:

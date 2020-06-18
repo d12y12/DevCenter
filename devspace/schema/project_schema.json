@@ -219,11 +219,6 @@
     "docbuilder_service": {
       "$id": "#/definitions/docbuilder_service",
       "type": "object",
-      "required": [
-        "builder",
-        "source",
-        "output"
-      ],
       "properties": {
         "builder": {
           "type": "string",
@@ -236,8 +231,17 @@
         "source": {
           "type": "string"
         },
-        "output": {
+        "build": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "publish": {
           "type": "string"
+        },
+        "synchronization": {
+          "$ref": "#/definitions/synchronization"
         }
       },
       "additionalProperties": false

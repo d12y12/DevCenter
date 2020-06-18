@@ -38,11 +38,14 @@ class DevSpaceServer:
 
     def load_settings(self):
         server_settings = self.settings['servers']
-        self.localization = server_settings[self.server_name]['localization']
+        if self.server_name not in server_settings:
+            raise ConfigurationError("{} not in server setting".format(self.server_name))
         self.image = server_settings[self.server_name]['type']
         if self.image not in self.image_support:
             raise ConfigurationError("Not support image {}. \n"
                                      "Support images: {}".format(self.image, self.image_support))
+        if 'localization' in server_settings[self.server_name]:
+            self.localization = server_settings[self.server_name]['localization']
 
     def dockerfile(self, tz=True, distros=True, python=True):
         # ${image} ${maintainer}, ${localization_distros_mirror}, ${localization_tz}, ${localization_python_mirror}
