@@ -30,7 +30,7 @@ ${localization_tz}
     && useradd --shell /bin/bash -u 1000 -o -c "" -m yang
 
 USER yang
-WORKDIR /docs
+WORKDIR /apps
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]

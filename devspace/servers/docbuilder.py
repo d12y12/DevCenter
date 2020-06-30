@@ -4,7 +4,7 @@
 import string
 import os
 import json
-from os.path import join, isdir
+from os.path import join, isdir, exists
 from shutil import ignore_patterns
 from devspace.utils.misc import render_template, copytree
 from devspace.servers import DevSpaceServer
@@ -19,9 +19,10 @@ TEMPLATES_MAPPING = {
     'DockerCompose': ('${TEMPLATES_DIR}/DocBuilder/server.yaml.template', ''),
     # ${volume} ${container_name} ${shell}
     'StartScript': ("${TEMPLATES_DIR}/DocBuilder/scripts/start.template",
-                    "${project_dir}/servers/DocBuilder/scripts/start.{ext}")
+                    "${project_dir}/servers/DocBuilder/scripts/start.${ext}")
 }
 
+APP_SRC = 'https://github.com/d12y12/DocBuilder.git'
 
 class DocBuilder(DevSpaceServer):
     type = 'DocBuilder'
@@ -79,6 +80,8 @@ class DocBuilder(DevSpaceServer):
             if service['needWeb']:
                 volume += '\n' + ' '*11 + '-v {}/www/services/{}:/share/{} \\'.format(self.settings['project']['path'],
                                                                                       service_name, service_name)
+        volume += '\n' + ' '*11 + '-v {}:/apps \\'.format(join(self.settings['project']['path'], 'servers',
+                                                               self.server_name, 'apps').replace("\\","/"))
         shell = '/bin/bash'
         if self.image == 'alpine':
             shell = '/bin/sh'
@@ -89,6 +92,20 @@ class DocBuilder(DevSpaceServer):
 
     def create_server_structure(self):
         self.create_server_base_structure(ignore_patterns('*.template'))
+        prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name)
+        # generate apps
+        apps_dir = join(prj_srv_dir, 'apps')
+        os.makedirs(apps_dir, exist_ok=True)
+        if not exists(join(apps_dir, '.git')):
+            ret = subprocess.run(["git", "clone", APP_SRC, apps_dir], stdout=subprocess.DEVNULL)
+            if ret.returncode != 0:
+                raise RuntimeError("Clone app failed, please try render again")
+        else:
+            pass
+        # generate database
+        database = join(apps_dir, 'database.json')
+        with open(database, 'w', encoding="utf-8") as f:
+            json.dump(self.services, f, indent=2, ensure_ascii=False)
         # make www
         www_dir = self.settings.get("SHARED_WEB", "")
         os.makedirs(www_dir, exist_ok=True)
@@ -99,15 +116,6 @@ class DocBuilder(DevSpaceServer):
             service_dir = join(data_dir, service_name)
             os.makedirs(service_dir, exist_ok=True)
             os.makedirs(join(www_dir, 'services', service_name), exist_ok=True)
-            if len(os.listdir(service_dir)) == 0 and 'source' in service and service['source']:
-                if isdir(service['source']):
-                    copytree(service['source'], service_dir)
-                else:
-                    ret = subprocess.run(["git", "clone",  service['source'], service_dir], stdout=subprocess.DEVNULL)
-                    if ret.returncode != 0:
-                        raise RuntimeError("can't clone {}".format(service['source']))
-            else:
-                pass
 
     def render(self):
         self.create_server_structure()

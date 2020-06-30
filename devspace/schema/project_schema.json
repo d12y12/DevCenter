@@ -229,12 +229,15 @@
           ]
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "format": "uri",
+          "pattern": "^(https?)://"
         },
         "build": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^(make |cd |cp ).*$"
           }
         },
         "publish": {

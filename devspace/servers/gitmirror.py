@@ -80,8 +80,8 @@ class GitMirror(DevSpaceServer):
         prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name)
         # generate apps
         apps_dir = join(prj_srv_dir, 'apps')
-        if not exists(apps_dir):
-            os.mkdir(apps_dir)
+        os.makedirs(apps_dir, exist_ok=True)
+        if not exists(join(apps_dir, '.git')):
             ret = subprocess.run(["git", "clone", APP_SRC, apps_dir], stdout=subprocess.DEVNULL)
             if ret.returncode != 0:
                 raise RuntimeError("Clone app failed, please try render again")

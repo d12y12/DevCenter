@@ -28,7 +28,7 @@ ${localization_tz}
     && adduser --disabled-password --home /home/yang --gecos "" --shell /bin/sh --uid 1000 yang
 
 USER yang
-WORKDIR /docs
+WORKDIR /apps
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/sh"]

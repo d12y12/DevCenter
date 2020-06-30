@@ -89,12 +89,14 @@
       }
     },
     "note": {
-      "Web": {
-      },
+      "Web": {},
       "DocBuilder": {
         "builder": "sphinx",
         "source": "https://github.com/d12y12/notes.git",
-        "output": "./_build"
+        "build": [
+          "make html"
+        ],
+        "publish": "./_build/html"
       },
       "Synchronization": {
         "consistency": true,
@@ -107,8 +109,21 @@
       },
       "DocBuilder": {
         "builder": "docbook",
-        "source": "Z:/yocto-docs",
-        "output": "./build"
+        "source": "https://github.com/d12y12/yocto-docs-cn.git",
+        "build": [
+          "cd documentation",
+          "make html DOC=adt-manual",
+          "make html DOC=brief-yoctoprojectqs",
+          "make html DOC=bsp-guide",
+          "make html DOC=dev-manual",
+          "make html DOC=kernel-dev",
+          "make html DOC=overview-manual",
+          "make html DOC=profile-manual",
+          "make html DOC=ref-manual",
+          "make html DOC=sdk-manual",
+          "make html DOC=toaster-manual"
+        ],
+        "publish": "./build"
       },
       "Synchronization": {
         "consistency": true,
@@ -118,9 +133,6 @@
     "test": {
       "Web": {},
       "DocBuilder": {
-        "builder": "",
-        "source": "",
-        "output": ""
       }
     }
   }
