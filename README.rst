@@ -37,6 +37,7 @@ Available commands::
    python3 ../devspace render --server GitMirror
    python3 ../devspace render --server DocBuilder
    echo your_github_user_name:your_github_token > ./servers/GitMirror/apps/github_token
+   echo your_gitee_user_name:your_gitee_token > ./servers/GitMirror/apps/gitee_token
    docker-compose build
    docker-compose up -d
 

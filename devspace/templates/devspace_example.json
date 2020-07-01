@@ -76,11 +76,6 @@
             "source": "d12y12/temp",
             "excludes": [],
             "targets": []
-          },
-          {
-            "source": "scrapy/scrapy",
-            "excludes": [],
-            "targets": []
           }
         ],
         "gitee": []
