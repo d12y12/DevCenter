@@ -29,6 +29,7 @@ Available commands::
    git clone https://github.com/d12y12/DevSpace.git
    pip3 install -r requirements.txt
    cd DevSpace/
+   # user python instead of python3 in Windows
    python3 ./devspace init demo ./workdir --example --extra='maintainer=yang <d12y12@hotmail.com>'
    cd workdir/
    ! modify your devspace.json

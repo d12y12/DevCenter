@@ -50,6 +50,7 @@
           }
         ],
         "github": [],
+        "gitee": [],
         "synchronization": {
           "consistency": true,
           "crontab": "*/5 * * * *"
@@ -78,6 +79,45 @@
           },
           {
             "source": "scrapy/scrapy",
+            "excludes": [],
+            "targets": []
+          }
+        ],
+        "gitee": []
+      },
+      "Synchronization": {
+        "consistency": true,
+        "crontab": "*/5 * * * *"
+      }
+    },
+    "gitee": {
+      "Web": {
+        "cgit_options": {
+          "title": "Mirror Repositories",
+          "description": "",
+          "max-repo-count": 50,
+          "logo": {
+            "light": "E:/Git/DevSpace/devspace/templates/example/github-logo-light.png",
+            "dark": "E:/Git/DevSpace/devspace/templates/example/github-logo-dark.png"
+          }
+        }
+      },
+      "GitMirror": {
+        "cgit": [],
+        "github": [],
+        "gitee": [
+          {
+            "source": "d12y12/temp",
+            "excludes": [],
+            "targets": []
+          },
+          {
+            "source": "nanmu42",
+            "excludes": [],
+            "targets": []
+          },
+          {
+            "source": "TensorLayer",
             "excludes": [],
             "targets": []
           }

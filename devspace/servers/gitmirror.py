@@ -32,7 +32,7 @@ APP_SRC = 'https://github.com/d12y12/GitMirror.git'
 class GitMirror(DevSpaceServer):
     type = 'GitMirror'
     image_support = ['debian', 'alpine']
-    support_repository_type = ['cgit', 'github']
+    support_repository_type = ['cgit', 'github', 'gitee']
 
     def __init__(self, server_settings=None):
         self.cron = False

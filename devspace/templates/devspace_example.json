@@ -50,6 +50,7 @@
           }
         ],
         "github": [],
+        "gitee": [],
         "synchronization": {
           "consistency": true,
           "crontab": "*/5 * * * *"
@@ -78,6 +79,35 @@
           },
           {
             "source": "scrapy/scrapy",
+            "excludes": [],
+            "targets": []
+          }
+        ],
+        "gitee": []
+      },
+      "Synchronization": {
+        "consistency": true,
+        "crontab": "*/5 * * * *"
+      }
+    },
+    "gitee": {
+      "Web": {
+        "cgit_options": {
+          "title": "Mirror Repositories",
+          "description": "",
+          "max-repo-count": 50,
+          "logo": {
+            "light": "${template_dir}/example/gitee-logo-light.png",
+            "dark": "${template_dir}/example/gitee-logo-dark.png"
+          }
+        }
+      },
+      "GitMirror": {
+        "cgit": [],
+        "github": [],
+        "gitee": [
+          {
+            "source": "d12y12/temp",
             "excludes": [],
             "targets": []
           }

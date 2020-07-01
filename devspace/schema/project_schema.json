@@ -193,7 +193,8 @@
       "type": "object",
       "required": [
         "cgit",
-        "github"
+        "github",
+        "gitee"
       ],
       "properties": {
         "cgit": {
@@ -207,6 +208,13 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/github_repository"
+          },
+          "uniqueItems": true
+        },
+        "gitee": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitee_repository"
           },
           "uniqueItems": true
         },
@@ -360,6 +368,43 @@
             "minimum": 1,
             "maximum": 140,
             "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38})(\/[\\w.-]{1,100})?$"
+          },
+          "uniqueItems": true
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^(https?)://"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "gitee_repository": {
+      "$id": "#/definitions/gitee_repository",
+      "type": "object",
+      "required": [
+        "source",
+        "excludes",
+        "targets"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minimum": 1,
+          "maximum": 300,
+          "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,44})(\/[\\w.-]{2,255})?$"
+        },
+        "excludes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minimum": 1,
+            "maximum": 300,
+            "pattern": "^([a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,44})(\/[\\w.-]{2,255})?$"
           },
           "uniqueItems": true
         },
