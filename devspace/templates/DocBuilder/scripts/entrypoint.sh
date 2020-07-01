@@ -29,4 +29,8 @@ fi
 
 dispaly_usage
 
+chmod +x docbuilder.py
+
+./docbuilder.py --help
+
 exec "$@"

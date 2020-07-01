@@ -3,17 +3,17 @@
 
 import string
 import os
+import yaml
+from os.path import join
 import json
-from os.path import join, isdir, exists
 from shutil import ignore_patterns
-from devspace.utils.misc import render_template, copytree
+from devspace.utils.misc import render_template
 from devspace.servers import DevSpaceServer
-import subprocess
 
 
 TEMPLATES_MAPPING = {
     # ${maintainer}, ${localization}, ${image}, ${port}
-    "Dockerfile": ("${TEMPLATES_DIR}/DocBuilder/Dockerfile-${image}.template",
+    "Dockerfile": ("${TEMPLATES_DIR}/DocBuilder/Dockerfile-${image}${cron}.template",
                    "${project_dir}/servers/DocBuilder/Dockerfile"),
     # ${server_name}
     'DockerCompose': ('${TEMPLATES_DIR}/DocBuilder/server.yaml.template', ''),
@@ -24,17 +24,21 @@ TEMPLATES_MAPPING = {
 
 APP_SRC = 'https://github.com/d12y12/DocBuilder.git'
 
+
 class DocBuilder(DevSpaceServer):
     type = 'DocBuilder'
     image_support = ['debian', 'alpine']
+    support_builder_type = ['docbook', 'sphinx']
 
     def __init__(self, server_settings=None):
+        self.cron = False
         self.builder = []
         super().__init__(server_settings)
         self.templates_mapping = json.loads(string.Template(json.dumps(TEMPLATES_MAPPING)).safe_substitute(
             TEMPLATES_DIR=self.settings.get("TEMPLATES_DIR", "").replace("\\", "/"),
             image=self.image,
-            project_dir=self.settings['project']['path'].replace("\\", "/")
+            project_dir=self.settings['project']['path'].replace("\\", "/"),
+            cron="" if not self.cron else "-cron"
         ))
 
     def load_settings(self):
@@ -48,6 +52,8 @@ class DocBuilder(DevSpaceServer):
                         self.builder.append(service_setting[self.__class__.__name__]['builder'])
                     if 'Web' in service_setting:
                         self.services[service_name]['needWeb'] = True
+                    if 'synchronization' in service_setting[self.__class__.__name__].keys():
+                        self.cron = True
 
     def dockerfile(self, tz=True, distros=True, python=True):
         # ${docbook_builder} ${sphnix_builder}
@@ -67,43 +73,23 @@ class DocBuilder(DevSpaceServer):
         render_template(dst_file, dst_file, docbook_builder=docbook_builder,
                         sphnix_builder=sphnix_builder)
 
-    def start_script(self):
-        src_file = self.templates_mapping['StartScript'][0]
-        dst_file = self.templates_mapping['StartScript'][1]
-
-        dst_file_linux = string.Template(dst_file).safe_substitute(ext='sh')
-        dst_file_win = string.Template(dst_file).safe_substitute(ext='bat')
+    def start_script_service_volume(self):
         volume = ''
         for service_name, service in self.services.items():
-            volume += '\n' + ' '*11 + '-v {}/data/{}:/docs/{} \\'.format(self.settings['project']['path'],
-                                                                         service_name, service_name)
+            volume += '\n' + ' ' * 11 + '-v {}/data/{}:/docs/{} \\'.format(self.settings['project']['path'],
+                                                                           service_name, service_name)
             if service['needWeb']:
-                volume += '\n' + ' '*11 + '-v {}/www/services/{}:/share/{} \\'.format(self.settings['project']['path'],
-                                                                                      service_name, service_name)
-        volume += '\n' + ' '*11 + '-v {}:/apps \\'.format(join(self.settings['project']['path'], 'servers',
-                                                               self.server_name, 'apps').replace("\\","/"))
-        shell = '/bin/bash'
-        if self.image == 'alpine':
-            shell = '/bin/sh'
-        render_template(src_file, dst_file_linux, volume=volume, shebang='#!/bin/sh', shell=shell,
-                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
-        render_template(src_file, dst_file_win, volume=volume, shebang='', shell=shell,
-                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+                volume += '\n' + ' ' * 11 + '-v {}/www/services/{}:/share/{} \\'.format(
+                    self.settings['project']['path'],
+                    service_name, service_name)
+        return volume
 
     def create_server_structure(self):
         self.create_server_base_structure(ignore_patterns('*.template'))
+        self.install_app(APP_SRC)
         prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name)
-        # generate apps
-        apps_dir = join(prj_srv_dir, 'apps')
-        os.makedirs(apps_dir, exist_ok=True)
-        if not exists(join(apps_dir, '.git')):
-            ret = subprocess.run(["git", "clone", APP_SRC, apps_dir], stdout=subprocess.DEVNULL)
-            if ret.returncode != 0:
-                raise RuntimeError("Clone app failed, please try render again")
-        else:
-            pass
         # generate database
-        database = join(apps_dir, 'database.json')
+        database = join(prj_srv_dir, 'apps', 'database.json')
         with open(database, 'w', encoding="utf-8") as f:
             json.dump(self.services, f, indent=2, ensure_ascii=False)
         # make www
@@ -113,14 +99,18 @@ class DocBuilder(DevSpaceServer):
         data_dir = self.settings.get("SHARED_DATA", "")
         os.makedirs(data_dir, exist_ok=True)
         for service_name, service in self.services.items():
-            service_dir = join(data_dir, service_name)
-            os.makedirs(service_dir, exist_ok=True)
-            os.makedirs(join(www_dir, 'services', service_name), exist_ok=True)
+            os.makedirs(join(data_dir, service_name), exist_ok=True)
+            if service['needWeb']:
+                os.makedirs(join(www_dir, 'services', service_name), exist_ok=True)
+        # make log root
+        log_dir = join(self.settings.get("SHARED_LOG", ""), self.server_name)
+        os.makedirs(log_dir, exist_ok=True)
 
     def render(self):
         self.create_server_structure()
         self.dockerfile()
-        self.start_script()
+        if not self.cron:
+            self.start_script()
 
     def generate_docker_compose_service(self):
         template_file = self.templates_mapping['DockerCompose'][0]
@@ -128,4 +118,11 @@ class DocBuilder(DevSpaceServer):
             raw = fp.read().decode('utf8')
             content = string.Template(raw).safe_substitute(
                 server_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+        service_content = yaml.safe_load(content)
+        for service_name, service in self.services.items():
+            service_content['docbuilder']['volumes'].append('./data/{}:/docs/{}'.format(service_name, service_name))
+            if service['needWeb']:
+                service_content['docbuilder']['volumes'].append('./www/services/{}:/share/{}'.format(service_name,
+                                                                                                     service_name))
+        content = yaml.safe_dump(service_content)
         return content if content else ''

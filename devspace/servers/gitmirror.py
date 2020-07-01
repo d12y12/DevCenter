@@ -4,12 +4,12 @@
 import string
 import os
 import yaml
-from os.path import join, normpath, isfile, exists
+from os.path import join
 import json
-from shutil import ignore_patterns, copy2
-from devspace.utils.misc import render_template, copytree
+from shutil import ignore_patterns
+from devspace.utils.misc import render_template
 from devspace.servers import DevSpaceServer
-import subprocess
+
 
 TEMPLATES_MAPPING = {
     # ${maintainer}, ${localization}, ${image}, ${port}
@@ -20,7 +20,11 @@ TEMPLATES_MAPPING = {
                "${project_dir}/servers/GitMirror/apps/database/${service_name}.sql"),
     # ${server_name}
     'DockerCompose': ('${TEMPLATES_DIR}/GitMirror/server.yaml.template', ''),
+    # ${volume} ${container_name} ${shell}
+    'StartScript': ("${TEMPLATES_DIR}/GitMirror/scripts/start.template",
+                    "${project_dir}/servers/GitMirror/scripts/start.${ext}")
 }
+
 
 APP_SRC = 'https://github.com/d12y12/GitMirror.git'
 
@@ -75,18 +79,16 @@ class GitMirror(DevSpaceServer):
             render_template(template_file, dst_file, consistency=consistency, crontab=crontab,
                             repositories=repositories, service_name=service_name, host=host)
 
+    def start_script_service_volume(self):
+        volume = ''
+        for service_name, service in self.services.items():
+            volume += '\n' + ' ' * 11 + '-v {}/data/{}:/srv/git/{} \\'.format(self.settings['project']['path'],
+                                                                              service_name, service_name)
+        return volume
+
     def create_server_structure(self):
         self.create_server_base_structure(ignore_patterns('*.template', 'apps'))
-        prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name)
-        # generate apps
-        apps_dir = join(prj_srv_dir, 'apps')
-        os.makedirs(apps_dir, exist_ok=True)
-        if not exists(join(apps_dir, '.git')):
-            ret = subprocess.run(["git", "clone", APP_SRC, apps_dir], stdout=subprocess.DEVNULL)
-            if ret.returncode != 0:
-                raise RuntimeError("Clone app failed, please try render again")
-        else:
-            pass
+        self.install_app(APP_SRC)
         # make data dir
         data_dir = self.settings.get("SHARED_DATA", "")
         os.makedirs(data_dir, exist_ok=True)
@@ -100,6 +102,8 @@ class GitMirror(DevSpaceServer):
         self.create_server_structure()
         self.dockerfile()
         self.sqlite()
+        if not self.cron:
+            self.start_script()
 
     def generate_docker_compose_service(self):
         template_file = self.templates_mapping['DockerCompose'][0]

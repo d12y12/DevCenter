@@ -29,14 +29,17 @@ Available commands::
    git clone https://github.com/d12y12/DevSpace.git
    pip3 install -r requirements.txt
    cd DevSpace/
-   python3 ./devspace init demo ./workdir --extra='author=yang <d12y12@hotmail.com>' --extra='version=1.0.0'
+   python3 ./devspace init demo ./workdir --example --extra='maintainer=yang <d12y12@hotmail.com>'
    cd workdir/
-   python3 ../devspace render --server gitmirror-demo
-   echo your_github_user_name:your_github_token > ./gitmirror-demo/github_token
+   ! modify your devspace.json
+   python3 ../devspace render --server Web
+   python3 ../devspace render --server GitMirror
+   python3 ../devspace render --server DocBuilder
+   echo your_github_user_name:your_github_token > ./servers/GitMirror/apps/github_token
    docker-compose build
    docker-compose up -d
 
 进入 docker::
 
-   docker exec -it -u yang gitmirror-demo /bin/bash
+   docker exec -it -u yang <container_name> /bin/sh
 

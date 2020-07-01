@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-import json
+import subprocess
 import yaml
 import string
-from os.path import join, normpath
+from os.path import join, exists
 from devspace.exceptions import ConfigurationError
 from devspace.utils.misc import render_template, copytree
 
@@ -105,6 +105,43 @@ class DevSpaceServer:
             raise ValueError("Can't get Template or Project directory from setting")
         os.makedirs(prj_srv_dir, exist_ok=True)
         copytree(template_srv_dir, prj_srv_dir, ignore)
+
+    def install_app(self, src):
+        prj_srv_dir = join(self.settings['project']['path'], "servers", self.server_name)
+        # generate apps
+        apps_dir = join(prj_srv_dir, 'apps')
+        os.makedirs(apps_dir, exist_ok=True)
+        if not exists(join(apps_dir, '.git')):
+            ret = subprocess.run(["git", "clone", src, apps_dir], stdout=subprocess.DEVNULL)
+            if ret.returncode != 0:
+                raise RuntimeError("Clone app failed, please try render again")
+        else:
+            pass
+
+    def start_script(self):
+        src_file = self.templates_mapping['StartScript'][0]
+        dst_file = self.templates_mapping['StartScript'][1]
+
+        dst_file_linux = string.Template(dst_file).safe_substitute(ext='sh')
+        dst_file_win = string.Template(dst_file).safe_substitute(ext='bat')
+        volume = ''
+        volume += '\n' + ' ' * 11 + '-v {}:/apps \\'.format(join(self.settings['project']['path'], 'servers',
+                                                                 self.server_name, 'apps').replace("\\", "/"))
+        volume += '\n' + ' ' * 11 + '-v {}:/apps/logs \\'.format(join(self.settings['project']['path'], 'log',
+                                                                      self.server_name).replace("\\", "/"))
+        service_volume = self.start_script_service_volume()
+        if service_volume:
+            volume += service_volume
+        shell = '/bin/bash'
+        if self.image == 'alpine':
+            shell = '/bin/sh'
+        render_template(src_file, dst_file_linux, volume=volume, shebang='#!/bin/sh', shell=shell,
+                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+        render_template(src_file, dst_file_win, volume=volume, shebang='', shell=shell,
+                        container_name=(self.settings['project']['name'] + '_' + self.server_name).lower())
+
+    def start_script_service_volume(self):
+        raise NotImplementedError
 
     def render(self):
         raise NotImplementedError

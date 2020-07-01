@@ -1,0 +1,35 @@
+FROM ${image}
+
+${maintainer}
+
+ENV LANG=C.UTF-8
+
+COPY scripts/entrypoint-cron.sh /usr/local/bin/entrypoint.sh
+COPY logo.txt /logo.txt
+
+RUN set -x \
+${localization_distros_mirror}
+${localization_tz}
+# install packages
+    && apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y \
+                       git \
+                       cron \
+                       gosu \
+                       make \
+                       vim \
+                       procps \
+                       python3 \
+                       python3-pip \
+                       ${docbook_builder}
+    ${localization_python_mirror}
+    ${sphnix_builder}
+# clean up
+    && rm -rf /var/lib/apt/lists/* \
+# configure entrypint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /apps
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
